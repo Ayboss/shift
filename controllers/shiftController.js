@@ -46,9 +46,8 @@ exports.getAllStaffShift = catchError(async (req, res, next) => {
 exports.addBulkShift = catchError(async (req, res, next) => {
   const company = req.user;
   if (!req.file) {
-    return new AppError(
-      "Please upload an excel file containing the shift",
-      400
+    return next(
+      new AppError("Please upload an excel file containing the shift", 400)
     );
   }
 

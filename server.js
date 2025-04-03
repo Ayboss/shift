@@ -1,6 +1,7 @@
 require("dotenv").config("./env");
 const logger = require("./util/logger");
 const app = require("./app");
+// require("./database/create_table").init();
 
 const PORT = process.env.PORT || 3333;
 const server = app.listen(PORT, () => {

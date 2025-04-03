@@ -179,7 +179,7 @@ exports.login = catchError(async (req, res, next) => {
     ],
   });
   if (!staff) {
-    return next(AppError("staff does not exist", 404));
+    return next(new AppError("staff does not exist", 404));
   }
 
   if (!comparePassword(password, staff.password)) {

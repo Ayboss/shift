@@ -42,7 +42,7 @@ exports.login = catchError(async (req, res, next) => {
     where: { companyEmail: companyEmail },
   });
   if (!company) {
-    return next(AppError("company does not exist", 404));
+    return next(new AppError("company does not exist", 404));
   }
 
   if (!comparePassword(password, company.password)) {

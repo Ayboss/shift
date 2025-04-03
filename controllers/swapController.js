@@ -155,9 +155,11 @@ exports.updateSwapStatus = catchError(async (req, res, next) => {
   const company = req.user;
   const { status: statusval, swapId } = req.params;
   if (statusval != status.ACCEPTED || statusval != status.DECLINED) {
-    return new AppError(
-      "you can either pass ACCEPTED  or DECLINED to the status",
-      400
+    return next(
+      new AppError(
+        "you can either pass ACCEPTED  or DECLINED to the status",
+        400
+      )
     );
   }
   const swap = await Swap.findOne({
