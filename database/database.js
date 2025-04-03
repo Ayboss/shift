@@ -18,6 +18,7 @@ const sequelize = new Sequelize(DB_name, DB_user, DB_password, {
   logging: false, // Set to true if you want to see SQL queries in the console
 });
 
+console.log(DB_host, "HOST ⚠️⚠️");
 sequelize
   .authenticate()
   .then(() => console.log("Connected to MySQL database! 🚀", DB_host))
