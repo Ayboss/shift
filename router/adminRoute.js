@@ -4,9 +4,9 @@ const adminController = require("../controllers/adminController");
 const authController = require("../controllers/authController");
 
 router.post("/login", adminController.login);
-router.post("/register", adminController.register);
 
 router.use(authController.protectAdmin);
+router.post("/register", adminController.register);
 router.post("/company/register", adminController.registerCompany);
 router.get("/dashboard", adminController.getDashboardDetails);
 router.get("/company", adminController.getAllCompanies);

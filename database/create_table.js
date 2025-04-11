@@ -1,3 +1,4 @@
+const Admin = require("../models/adminModel");
 const Circle = require("../models/circleModel");
 const Company = require("../models/companyModel");
 const Notification = require("../models/notificationModel");
@@ -6,8 +7,20 @@ const Shift = require("../models/shiftModel");
 const Staff = require("../models/staffModel");
 const Swap = require("../models/swapModel");
 const logger = require("../util/logger");
+
+const create_admin_table = () => {
+  Admin.sync({ alter: true })
+    .then(() => {
+      logger.info("Admin created");
+    })
+    .catch((err) => {
+      console.log(err);
+      logger.error("company not created");
+    });
+};
+
 const create_company_table = () => {
-  Company.sync({ force: false })
+  Company.sync({ alter: true })
     .then(() => {
       logger.info("company created");
     })
@@ -18,7 +31,7 @@ const create_company_table = () => {
 };
 
 const create_staff_table = () => {
-  Staff.sync({ force: false })
+  Staff.sync({ alter: true })
     .then(() => {
       logger.info("staff created");
     })
@@ -29,7 +42,7 @@ const create_staff_table = () => {
 };
 
 const create_shift_table = () => {
-  Shift.sync({ force: false })
+  Shift.sync({ alter: true })
     .then(() => {
       logger.info("Shift created");
     })
@@ -40,7 +53,7 @@ const create_shift_table = () => {
 };
 
 const create_offer_table = () => {
-  Offer.sync({ force: false })
+  Offer.sync({ alter: true })
     .then(() => {
       logger.info("offers created");
     })
@@ -51,7 +64,7 @@ const create_offer_table = () => {
 };
 
 const create_swap_table = () => {
-  Swap.sync({ force: false })
+  Swap.sync({ alter: true })
     .then(() => {
       logger.info("Swap created");
     })
@@ -61,7 +74,7 @@ const create_swap_table = () => {
     });
 };
 const create_circle_table = () => {
-  Circle.sync({ force: false })
+  Circle.sync({ alter: true })
     .then(() => {
       logger.info("Circle created");
     })
@@ -71,7 +84,7 @@ const create_circle_table = () => {
     });
 };
 const create_notification_table = () => {
-  Notification.sync({ force: false })
+  Notification.sync({ alter: true })
     .then(() => {
       logger.info("Notification created");
     })
@@ -80,8 +93,10 @@ const create_notification_table = () => {
       logger.error("Notification not created");
     });
 };
+create_notification_table();
 
 exports.init = function () {
+  create_admin_table();
   create_company_table();
   create_staff_table();
   create_shift_table();

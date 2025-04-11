@@ -7,17 +7,9 @@ const Swap = require("../models/swapModel");
 const AppError = require("../util/appError");
 const catchError = require("../util/catchError");
 const createJWTToken = require("../util/createJWTToken");
+const { formatStats } = require("../util/formatStats");
 const { hashPassword, comparePassword } = require("../util/passwordFunc");
-const status = require("../util/statusType");
 const { Op } = require("sequelize");
-
-const formatStats = (stats) => {
-  const statsMap = Object.fromEntries(stats.map((s) => [s.status, s.count]));
-
-  newstat = {};
-  Object.values(status).forEach((s) => (newstat[s] = statsMap[s] || 0));
-  return newstat;
-};
 
 async function calculateTheStatistic(staffId) {
   try {

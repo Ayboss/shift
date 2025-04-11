@@ -28,7 +28,7 @@ Admin.init(
   },
   {
     sequelize,
-    tableName: "companies",
+    tableName: "admins",
     timestamps: true,
     hooks: {
       beforeCreate: async (admin) => {

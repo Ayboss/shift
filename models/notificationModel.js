@@ -2,6 +2,7 @@ const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../database/database");
 const generateUniqueEntityId = require("../util/generateUniqueEntityId");
 const Staff = require("./staffModel");
+const Company = require("./companyModel");
 
 class Notification extends Model {}
 
@@ -17,6 +18,14 @@ Notification.init(
       allowNull: false,
       references: {
         model: Staff,
+        key: "id",
+      },
+    },
+    companyId: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      references: {
+        model: Company,
         key: "id",
       },
     },
@@ -58,6 +67,8 @@ Notification.init(
 );
 
 Notification.belongsTo(Staff, { foreignKey: "staffId", as: "staff" });
+Notification.belongsTo(Company, { foreignKey: "companyId", as: "company" });
 Staff.hasMany(Notification, { foreignKey: "staffId", as: "notifications" });
+Company.hasMany(Notification, { foreignKey: "companyId", as: "notifications" });
 
 module.exports = Notification;

@@ -5,6 +5,12 @@ const createJWTToken = require("../util/createJWTToken");
 const AppError = require("../util/appError");
 const Company = require("../models/companyModel");
 const companyController = require("../controllers/companyController");
+const Staff = require("../models/staffModel");
+const Offer = require("../models/offerModel");
+const Swap = require("../models/swapModel");
+const sequelize = require("../database/database");
+const { formatStats } = require("../util/formatStats");
+const Notification = require("../models/notificationModel");
 
 exports.login = catchError(async (req, res, next) => {
   const { email, password } = req.body;
@@ -33,6 +39,7 @@ exports.register = catchError(async (req, res, next) => {
   }
   const hashed = await hashPassword(req.body.password);
 
+  console.log(req.body, "BODY");
   const admin = await Admin.create({
     email: req.body.email,
     password: hashed,
@@ -47,11 +54,48 @@ exports.register = catchError(async (req, res, next) => {
 });
 
 exports.getDashboardDetails = catchError(async (req, res, next) => {
-  // count all companies
-  // count all accepted swaps and offers
-  // count all declined swaps and offers
-  // get notifications of some
+  const [
+    companyCount,
+    staffCount,
+    swapCountByStatus,
+    offerCountByStatus,
+    notifications,
+  ] = await Promise.all([
+    Company.count(),
+    Staff.count(),
+    Swap.findAll({
+      attributes: [
+        "status",
+        [sequelize.fn("COUNT", sequelize.col("status")), "count"],
+      ],
+      group: ["status"],
+      raw: true,
+    }),
+    Offer.findAll({
+      attributes: [
+        "status",
+        [sequelize.fn("COUNT", sequelize.col("status")), "count"],
+      ],
+      group: ["status"],
+      raw: true,
+    }),
+    Notification.findAll({ where: { notifType: "GENERAL" } }),
+  ]);
+
+  const formatswaps = formatStats(swapCountByStatus);
+  const formatoffer = formatStats(offerCountByStatus);
+  res.status(200).json({
+    status: "success",
+    data: {
+      totalCompanies: companyCount,
+      totalStaffs: staffCount,
+      swapsByStatus: formatswaps,
+      offersByStatus: formatoffer,
+      notifications: notifications,
+    },
+  });
 });
+
 exports.getAllCompanies = catchError(async (req, res, next) => {
   const companies = await Company.findAll();
   return res.status(200).json({
@@ -59,6 +103,7 @@ exports.getAllCompanies = catchError(async (req, res, next) => {
     data: companies,
   });
 });
+
 exports.getOneCompany = catchError(async (req, res, next) => {
   const { companyId } = req.params;
   const company = await Company.findOne({ where: { id: companyId } });

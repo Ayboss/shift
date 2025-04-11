@@ -6,6 +6,11 @@ const catchError = require("../util/catchError");
 const Staff = require("../models/staffModel");
 const createJWTToken = require("../util/createJWTToken");
 const { hashPassword, comparePassword } = require("../util/passwordFunc");
+const Notification = require("../models/notificationModel");
+const Swap = require("../models/swapModel");
+const Offer = require("../models/offerModel");
+const sequelize = require("../database/database");
+const { formatStats } = require("../util/formatStats");
 
 exports.signup = catchError(async (req, res, next) => {
   if (req.body.password && req.body.password.length < 8) {
@@ -55,6 +60,47 @@ exports.login = catchError(async (req, res, next) => {
     status: "success",
     token: token,
     data: company,
+  });
+});
+
+exports.getDashboardDetails = catchError(async (req, res, next) => {
+  const company = req.user;
+  const [staffCount, swapCountByStatus, offerCountByStatus, notifications] =
+    await Promise.all([
+      Staff.count({ where: { companyId: company.id } }),
+      Swap.findAll({
+        attributes: [
+          "status",
+          [sequelize.fn("COUNT", sequelize.col("status")), "count"],
+        ],
+        where: { companyId: company.id },
+        group: ["status"],
+        raw: true,
+      }),
+      Offer.findAll({
+        attributes: [
+          "status",
+          [sequelize.fn("COUNT", sequelize.col("status")), "count"],
+        ],
+        where: { companyId: company.id },
+        group: ["status"],
+        raw: true,
+      }),
+      Notification.findAll({
+        where: { notifType: "GENERAL", companyId: company.id },
+      }),
+    ]);
+
+  const formatswaps = formatStats(swapCountByStatus);
+  const formatoffer = formatStats(offerCountByStatus);
+  res.status(200).json({
+    status: "success",
+    data: {
+      totalStaffs: staffCount,
+      swapsByStatus: formatswaps,
+      offersByStatus: formatoffer,
+      notifications: notifications,
+    },
   });
 });
 

@@ -7,6 +7,7 @@ router.post("/register", companyController.signup);
 router.post("/login", companyController.login);
 
 router.use(authController.protectCompany);
+router.get("/dashboard", companyController.getDashboardDetails);
 router.post("/staff", companyController.addStaff);
 router.get("/staff", companyController.getStaff);
 router.get("/staff/:staffid", companyController.getOneStaff);
