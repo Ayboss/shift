@@ -202,7 +202,7 @@ exports.login = catchError(async (req, res, next) => {
     ],
     limit: 20,
   });
-  const monstRecentShift = len(upcomingshift) > 0 ? upcomingshift[0] : {};
+  const mostRecentShift = len(upcomingshift) > 0 ? upcomingshift[0] : {};
   const { offerStats, swapStats, claimedOfferStats, claimedSwapStats } =
     await calculateTheStatistic(staff.id);
 
@@ -216,7 +216,7 @@ exports.login = catchError(async (req, res, next) => {
       claimedOfferStats,
       claimedSwapStats,
       upcomingshift,
-      monstRecentShift,
+      mostRecentShift,
     },
   });
 });

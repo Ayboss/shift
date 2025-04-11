@@ -50,6 +50,7 @@ exports.login = catchError(async (req, res, next) => {
   }
 
   const token = createJWTToken(company.id);
+  company.password = undefined;
   return res.status(200).json({
     status: "success",
     token: token,

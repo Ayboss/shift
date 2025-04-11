@@ -4,6 +4,7 @@ const AppError = require("../util/appError");
 const catchError = require("../util/catchError");
 const Company = require("../models/companyModel");
 const Staff = require("../models/staffModel");
+const Admin = require("../models/adminModel");
 
 const checkAndDecode = async (req, next) => {
   try {
@@ -39,6 +40,18 @@ exports.protectStaff = catchError(async (req, res, next) => {
 
   if (!currentUser) {
     return next(new AppError("staff with token does not exit", 401));
+  }
+
+  req.user = currentUser;
+  next();
+});
+
+exports.protectAdmin = catchError(async (req, res, next) => {
+  const decode = await checkAndDecode(req, next);
+  const currentUser = await Admin.findOne({ where: { id: decode.id } });
+
+  if (!currentUser) {
+    return next(new AppError("Admin with token does not exit", 401));
   }
 
   req.user = currentUser;
