@@ -93,15 +93,15 @@ const create_notification_table = () => {
       logger.error("Notification not created");
     });
 };
-create_notification_table();
-
+// create_notification_table();
+// create_staff_table();
 exports.init = function () {
-  create_admin_table();
-  create_company_table();
+  // create_admin_table();
+  // create_company_table();
   create_staff_table();
-  create_shift_table();
-  create_offer_table();
-  create_swap_table();
-  create_circle_table();
-  create_notification_table();
+  // create_shift_table();
+  // create_offer_table();
+  // create_swap_table();
+  // create_circle_table();
+  // create_notification_table();
 };

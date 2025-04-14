@@ -138,9 +138,9 @@ exports.getStaff = catchError(async (req, res, next) => {
 
 exports.getOneStaff = catchError(async (req, res, next) => {
   const company = req.user;
-  const staffid = req.params.staffid;
+  const staffId = req.params.staffId;
   const staff = await Staff.findOne({
-    where: { companyId: company.id, id: staffid },
+    where: { companyId: company.id, id: staffId },
   });
   if (!staff) {
     return next(new AppError("this staff does not exist", 400));
@@ -148,6 +148,27 @@ exports.getOneStaff = catchError(async (req, res, next) => {
   return res.status(200).json({
     status: "success",
     data: staff,
+  });
+});
+
+exports.blockStaff = catchError(async (req, res, next) => {
+  const company = req.user;
+  const { staffId } = req.params;
+  const { block } = req.body;
+  if (block == undefined || block == null) {
+    return next(new AppError("block body is required", 400));
+  }
+  const staff = await Staff.findOne({
+    where: { companyId: company.id, id: staffId },
+  });
+  if (!staff) {
+    return next(new AppError("this staff does not exist", 400));
+  }
+  await staff.update({ blocked: !!block });
+  return res.status(200).json({
+    status: "success",
+    data: staff,
+    message: `Staff has been ${block ? "blocked" : "unblocked"} successfully`,
   });
 });
 

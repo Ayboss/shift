@@ -20,7 +20,7 @@ const checkAndDecode = async (req, next) => {
     }
     return await promisify(jwt.verify)(token, process.env.JWT_SECRET);
   } catch (err) {
-    throw err;
+    return next(new AppError("Please login to access this resource", 401));
   }
 };
 
@@ -40,6 +40,15 @@ exports.protectStaff = catchError(async (req, res, next) => {
 
   if (!currentUser) {
     return next(new AppError("staff with token does not exit", 401));
+  }
+
+  if (currentUser.blocked) {
+    return next(
+      new AppError(
+        "staff is blocked please contact you companies administration",
+        401
+      )
+    );
   }
 
   req.user = currentUser;

@@ -37,6 +37,10 @@ Staff.init(
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
+    blocked: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
     password: {
       type: DataTypes.STRING,
       allowNull: true,
