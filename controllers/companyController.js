@@ -143,7 +143,7 @@ exports.getOneStaff = catchError(async (req, res, next) => {
     where: { companyId: company.id, id: staffId },
   });
   if (!staff) {
-    return next(new AppError("this staff does not exist", 400));
+    return next(new AppError("this staff does not exist", 404));
   }
   return res.status(200).json({
     status: "success",

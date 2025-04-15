@@ -6,10 +6,12 @@ const Staff = require("../models/staffModel");
 const Swap = require("../models/swapModel");
 const AppError = require("../util/appError");
 const catchError = require("../util/catchError");
+const { storeImageInCLoud } = require("../util/cloudinary");
 const createJWTToken = require("../util/createJWTToken");
 const { formatStats } = require("../util/formatStats");
+const logger = require("../util/logger");
 const { hashPassword, comparePassword } = require("../util/passwordFunc");
-const { Op } = require("sequelize");
+const { Op, where } = require("sequelize");
 
 async function calculateTheStatistic(staffId) {
   try {
@@ -194,7 +196,7 @@ exports.login = catchError(async (req, res, next) => {
     ],
     limit: 20,
   });
-  const mostRecentShift = len(upcomingshift) > 0 ? upcomingshift[0] : {};
+  const mostRecentShift = upcomingshift.length > 0 ? upcomingshift[0] : {};
   const { offerStats, swapStats, claimedOfferStats, claimedSwapStats } =
     await calculateTheStatistic(staff.id);
 
@@ -240,5 +242,48 @@ exports.workingAtSameTime = catchError(async (req, res, next) => {
   return res.status(200).json({
     status: "success",
     data: staffs,
+  });
+});
+
+exports.getOneStaff = catchError(async (req, res, next) => {
+  const staffId = req.params.staffId;
+  const staff = await Staff.findOne({
+    where: { companyId: req.user.companyId, id: staffId },
+  });
+  if (!staff) {
+    return next(new AppError("this staff does not exist", 404));
+  }
+  return res.status(200).json({
+    status: "success",
+    data: staff,
+  });
+});
+
+exports.updateStaff = catchError(async (req, res, next) => {
+  const staff = req.user;
+  if (req.body.fullName) staff.fullName = req.body.fullName;
+  if (req.body.phoneNumber) staff.phoneNumber = req.body.phoneNumber;
+  await staff.save();
+  return res.status(200).json({
+    status: "sucess",
+    data: staff,
+  });
+});
+
+exports.uploadStaffImage = catchError(async (req, res, next) => {
+  const staff = req.user;
+  let imageurl = req.body.emojinumber;
+  let isImageMemoji = true;
+  if (req.body.isMemoji === false || req.body.isMemoji === "false") {
+    isImageMemoji = false;
+    imageurl = await storeImageInCLoud(req.file);
+  }
+
+  staff.image = imageurl;
+  staff.isImageMemoji = isImageMemoji;
+  await staff.save();
+  res.status(200).json({
+    status: "success",
+    data: staff,
   });
 });

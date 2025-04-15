@@ -13,16 +13,25 @@ Staff.init(
     fullName: {
       type: DataTypes.STRING,
       allowNull: true,
-      unique: true,
+    },
+    phoneNumber: {
+      type: DataTypes.STRING,
+      allowNull: true,
     },
     image: {
       type: DataTypes.STRING,
       allowNull: true,
     },
+    isImageMemoji: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
     email: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
+      validate: {
+        isEmail: true,
+      },
     },
     companyId: {
       type: DataTypes.STRING,
