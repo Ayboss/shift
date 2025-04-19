@@ -77,6 +77,27 @@ async function calculateTheStatistic(staffId) {
   }
 }
 
+function confirmPasswordResetValididty(staff, code, next) {
+  if (staff.passwordResetToken != code) {
+    console.log(staff.passwordResetToken, code);
+    return next(
+      new AppError(
+        "Incorrect code, please request a forget password, and try again",
+        400
+      )
+    );
+  }
+  if (!staff.passwordResetExpires || Date.now() > staff.passwordResetExpires) {
+    return next(
+      new AppError(
+        "password expiring time over, please try the forgot password route again",
+        400
+      )
+    );
+  }
+  return true;
+}
+
 exports.signup = catchError(async (req, res, next) => {
   const { email, fullName, shiftId } = req.body;
   if (!email || !fullName || !shiftId) {
@@ -107,21 +128,6 @@ exports.signup = catchError(async (req, res, next) => {
     token: token,
     data: { company: staff.company },
   });
-});
-
-exports.confirmCode = catchError(async (req, res, next) => {
-  const user = req.user;
-  const shiftId = req.body.code;
-
-  return res.send("do we really need this endpoint");
-  // if (shiftId != user.id){
-  //     return next(
-  //         new AppError(
-  //           "Incorrect shiftid provided, please check your mail for your shift id",
-  //           401
-  //         )
-  //       );
-  // }
 });
 
 exports.setPassword = catchError(async (req, res, next) => {
@@ -176,7 +182,7 @@ exports.login = catchError(async (req, res, next) => {
     return next(new AppError("staff does not exist", 404));
   }
 
-  if (!comparePassword(password, staff.password)) {
+  if (!(await comparePassword(password, staff.password))) {
     return next(new AppError("incorrect shiftid or password", 400));
   }
 
@@ -215,6 +221,67 @@ exports.login = catchError(async (req, res, next) => {
   });
 });
 
+exports.forgotPassword = catchError(async (req, res, next) => {
+  // generate a code, and send it to mail
+  // confirm the code and allow for the user to send a email
+  const staffId = req.body.staffId;
+  const staff = await Staff.findOne({ where: { id: staffId } });
+  if (!staff) {
+    return next(new AppError("this staff does not exist", 404));
+  }
+  // create code
+  code = "1111";
+  staff.passwordResetToken = code;
+  staff.passwordResetExpires = Date.now() + 1000 * 60 * 10;
+  await staff.save();
+  staff.passwordResetExpires = undefined;
+  staff.passwordResetToken = undefined;
+  // send token to the mail
+  const token = createJWTToken(staff.id);
+  return res.status(200).json({
+    status: "success",
+    message: "token sent to staff mail",
+    token: token,
+    data: staff,
+  });
+});
+
+exports.confirmCode = catchError(async (req, res, next) => {
+  const code = req.body.code;
+  const staff = req.user;
+  // check the time duration and the code
+  if (!confirmPasswordResetValididty(staff, code, next)) return;
+  staff.password = undefined;
+  staff.passwordResetExpires = undefined;
+  staff.passwordResetToken = undefined;
+  return res.status(200).json({
+    status: "success",
+    data: staff,
+  });
+});
+
+exports.resetpassword = catchError(async (req, res, next) => {
+  const code = req.body.code;
+  const password = req.body.password;
+  const staff = req.user;
+  // check the time duration and the code
+  if (!confirmPasswordResetValididty(staff, code, next)) return;
+  if (password && password.length < 8) {
+    return next(new AppError("Please input a stronger password", "401"));
+  }
+  const hashed = await hashPassword(req.body.password);
+  staff.password = hashed;
+  staff.passwordResetExpires = null;
+  staff.passwordResetToken = null;
+  staff.passwordChangedAt = Date.now() + 1000;
+  await staff.save();
+  staff.password = undefined;
+  return res.status(200).json({
+    status: "success",
+    data: staff,
+  });
+});
+
 exports.workingAtSameTime = catchError(async (req, res, next) => {
   const { shiftId } = req.params;
   const user = req.user;
@@ -231,11 +298,11 @@ exports.workingAtSameTime = catchError(async (req, res, next) => {
       },
     ],
   });
-
+  console.log(shifts[0].staff, "🚀");
   const staffs = [];
   shifts.forEach((sh) => {
     if (sh.staff.id != user.id || sh.staff.verified) {
-      staffs.push(sh._model.staff);
+      staffs.push(sh.staff);
     }
   });
 

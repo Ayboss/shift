@@ -55,6 +55,29 @@ exports.protectStaff = catchError(async (req, res, next) => {
   next();
 });
 
+exports.protectStaffWithPassword = catchError(async (req, res, next) => {
+  const decode = await checkAndDecode(req, next);
+  const currentUser = await Staff.scope("withPassword").findOne({
+    where: { id: decode.id },
+  });
+
+  if (!currentUser) {
+    return next(new AppError("staff with token does not exit", 401));
+  }
+
+  if (currentUser.blocked) {
+    return next(
+      new AppError(
+        "staff is blocked please contact you companies administration",
+        401
+      )
+    );
+  }
+
+  req.user = currentUser;
+  next();
+});
+
 exports.protectAdmin = catchError(async (req, res, next) => {
   const decode = await checkAndDecode(req, next);
   const currentUser = await Admin.findOne({ where: { id: decode.id } });

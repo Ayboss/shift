@@ -6,7 +6,18 @@ const { uploadProfileImage } = require("../util/upload");
 
 router.post("/register", staffController.signup);
 router.post("/login", staffController.login);
-router.post("/confirmcode", staffController.confirmCode);
+router.post("/forgotpassword", staffController.forgotPassword);
+
+router.post(
+  "/confirmcode",
+  authController.protectStaffWithPassword,
+  staffController.confirmCode
+);
+router.post(
+  "/resetpassword",
+  authController.protectStaffWithPassword,
+  staffController.resetpassword
+);
 
 router.use(authController.protectStaff);
 router.post("/password/set", staffController.setPassword);

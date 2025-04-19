@@ -54,6 +54,18 @@ Staff.init(
       type: DataTypes.STRING,
       allowNull: true,
     },
+    passwordResetToken: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    passwordResetExpires: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    passwordChangedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   },
   {
     sequelize,
@@ -80,10 +92,16 @@ Staff.init(
       },
     },
     defaultScope: {
-      attributes: { exclude: ["password"] },
+      attributes: {
+        exclude: ["password", "passwordResetToken", "passwordResetExpires"],
+      },
     },
     scopes: {
-      withPassword: { attributes: { include: ["password"] } },
+      withPassword: {
+        attributes: {
+          include: ["password", "passwordResetToken", "passwordResetExpires"],
+        },
+      },
     },
   }
 );
