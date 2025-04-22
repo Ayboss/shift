@@ -70,4 +70,7 @@ Offer.init(
   }
 );
 
+Offer.belongsTo(Staff, { as: "staff", foreignKey: "staffId" });
+Offer.belongsTo(Staff, { as: "claimer", foreignKey: "claimerId" });
+
 module.exports = Offer;

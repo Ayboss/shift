@@ -4,6 +4,7 @@ const catchError = require("../util/catchError");
 const AppError = require("../util/appError");
 const status = require("../util/statusType");
 const Shift = require("../models/shiftModel");
+const Staff = require("../models/staffModel");
 
 exports.createOffer = catchError(async (req, res, next) => {
   const user = req.user;
@@ -34,9 +35,36 @@ exports.createOffer = catchError(async (req, res, next) => {
 });
 
 exports.getAllOffer = catchError(async (req, res, next) => {
+  const { status } = req.query;
+  const whereClause = {
+    companyId: req.user.companyId,
+  };
+  if (status) {
+    whereClause.status = status;
+  }
   // filter by status
+  const attribute = [
+    "id",
+    "fullName",
+    "phoneNumber",
+    "email",
+    "image",
+    "isImageMemoji",
+  ];
   const offers = await Offer.findAll({
-    where: { companyId: req.user.companyId },
+    where: whereClause,
+    include: [
+      {
+        model: Staff,
+        as: "staff",
+        attributes: attribute,
+      },
+      {
+        model: Staff,
+        as: "claimer",
+        attributes: attribute,
+      },
+    ],
   });
 
   return res.status(200).json({

@@ -221,6 +221,40 @@ exports.login = catchError(async (req, res, next) => {
   });
 });
 
+exports.getCurrentUserWithDashboard = catchError(async (req, res, next) => {
+  const staff = req.user;
+
+  const upcomingshift = await Shift.findAll({
+    where: {
+      staffId: staff.id,
+      date: {
+        [Op.gt]: new Date(),
+      },
+    },
+    order: [
+      ["date", "ASC"],
+      ["isMorning", "DESC"],
+    ],
+    limit: 20,
+  });
+  const mostRecentShift = upcomingshift.length > 0 ? upcomingshift[0] : {};
+  const { offerStats, swapStats, claimedOfferStats, claimedSwapStats } =
+    await calculateTheStatistic(staff.id);
+
+  return res.status(200).json({
+    status: "success",
+    data: {
+      staff,
+      offerStats,
+      swapStats,
+      claimedOfferStats,
+      claimedSwapStats,
+      upcomingshift,
+      mostRecentShift,
+    },
+  });
+});
+
 exports.forgotPassword = catchError(async (req, res, next) => {
   // generate a code, and send it to mail
   // confirm the code and allow for the user to send a email
@@ -305,6 +339,16 @@ exports.workingAtSameTime = catchError(async (req, res, next) => {
       staffs.push(sh.staff);
     }
   });
+
+  return res.status(200).json({
+    status: "success",
+    data: staffs,
+  });
+});
+
+exports.getStaffs = catchError(async (req, res, next) => {
+  const staff = req.user;
+  const staffs = await Staff.findAll({ where: { companyId: staff.companyId } });
 
   return res.status(200).json({
     status: "success",

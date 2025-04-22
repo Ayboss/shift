@@ -1,6 +1,8 @@
 const express = require("express");
 const errorController = require("./controllers/errorController");
 const routers = require("./router/index");
+// adding all event listener
+require("./controllers/eventlisteners");
 
 app = express();
 app.use(express.json());

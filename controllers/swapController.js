@@ -1,4 +1,5 @@
 const Shift = require("../models/shiftModel");
+const Staff = require("../models/staffModel");
 const Swap = require("../models/swapModel");
 const AppError = require("../util/appError");
 const catchError = require("../util/catchError");
@@ -39,8 +40,37 @@ exports.createSwap = catchError(async (req, res, next) => {
 
 exports.getAllSwapForUser = catchError(async (req, res, next) => {
   const user = req.user;
+  const { status } = req.query;
+  const whereClause = {
+    companyId: user.companyId,
+    staffId: user.id,
+  };
+  if (status) {
+    whereClause.status = status;
+  }
+  const attribute = [
+    "id",
+    "fullName",
+    "phoneNumber",
+    "email",
+    "image",
+    "isImageMemoji",
+  ];
+  // filter by status
   const swaps = await Swap.findAll({
-    where: { companyId: user.companyId, staffId: user.id },
+    where: whereClause,
+    include: [
+      {
+        model: Staff,
+        as: "staff",
+        attributes: attribute,
+      },
+      {
+        model: Staff,
+        as: "claimer",
+        attributes: attribute,
+      },
+    ],
   });
 
   return res.status(200).json({

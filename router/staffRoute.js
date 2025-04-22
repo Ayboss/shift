@@ -24,6 +24,7 @@ router.post("/password/set", staffController.setPassword);
 
 router.use(authController.isVerified);
 router.get("/working/:shiftId", staffController.workingAtSameTime);
+router.get("/all", staffController.getStaffs);
 router.get("/:staffId", staffController.getOneStaff);
 router.patch("/", staffController.updateStaff);
 router.patch(
@@ -31,5 +32,5 @@ router.patch(
   uploadProfileImage,
   staffController.uploadStaffImage
 );
-
+router.get("/", staffController.getCurrentUserWithDashboard);
 module.exports = router;

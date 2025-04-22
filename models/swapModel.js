@@ -71,4 +71,7 @@ Swap.init(
   }
 );
 
+Swap.belongsTo(Staff, { as: "staff", foreignKey: "staffId" });
+Swap.belongsTo(Staff, { as: "claimer", foreignKey: "claimerId" });
+
 module.exports = Swap;

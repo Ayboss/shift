@@ -15,7 +15,7 @@ Notification.init(
     },
     staffId: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
       references: {
         model: Staff,
         key: "id",
@@ -45,7 +45,7 @@ Notification.init(
     },
     notifType: {
       allowNull: false,
-      type: DataTypes.ENUM("SWAP", "OFFER", "REMINDER", "GENERAL"),
+      type: DataTypes.ENUM("SWAP", "OFFER", "REMINDER", "GENERAL", "SPECIAL"),
       defaultValue: "GENERAL",
       validate: {
         notEmpty: true,
