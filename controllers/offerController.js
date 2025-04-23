@@ -22,8 +22,11 @@ exports.createOffer = catchError(async (req, res, next) => {
     return next(new AppError("This shift does not exist for this user", 400));
   }
   const prevOffer = await Offer.findOne({
-    shiftId: shiftId,
+    where: {
+      shiftId: shiftId,
+    },
   });
+
   if (prevOffer) {
     return next(new AppError("Shift already exist as an offer", 400));
   }
@@ -33,7 +36,7 @@ exports.createOffer = catchError(async (req, res, next) => {
     shiftId: shiftId,
     reason: reason,
   });
-  notifyOfferToCircle();
+  notifyOfferToCircle(user, offer.id);
   return res.status(200).json({
     status: "success",
     data: offer,
@@ -108,7 +111,7 @@ exports.claimOffer = catchError(async (req, res, next) => {
   }
 
   await offer.update({ status: status.IN_REVIEW, claimerId: user.id });
-  notifyOfferIsClaimed();
+  notifyOfferIsClaimed(user, offer);
   return res.status(200).json({
     status: "success",
     data: offer,
@@ -119,7 +122,7 @@ exports.claimOffer = catchError(async (req, res, next) => {
 exports.updateOfferStatus = catchError(async (req, res, next) => {
   const company = req.user;
   const { status: statusval, offerId } = req.params;
-  if (statusval != status.ACCEPTED || statusval != status.DECLINED) {
+  if (statusval != status.ACCEPTED && statusval != status.DECLINED) {
     return next(
       new AppError(
         "you can either pass ACCEPTED  or DECLINED to the status",
@@ -133,8 +136,14 @@ exports.updateOfferStatus = catchError(async (req, res, next) => {
   if (!offer) {
     return next(new AppError("This offer is no longer in review", 400));
   }
+  if (statusval != status.ACCEPTED) {
+    await Shift.update(
+      { staffId: offer.claimerId },
+      { where: { id: offer.shiftId } }
+    );
+  }
   await offer.update({ status: statusval });
-  notifyOfferUpdatedByCompany();
+  notifyOfferUpdatedByCompany(offer, statusval);
   return res.status(200).json({
     status: "success",
     data: offer,

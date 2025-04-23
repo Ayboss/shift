@@ -1,5 +1,6 @@
 const sequelize = require("../database/database");
 const Company = require("../models/companyModel");
+const ShiftType = require("../models/shiftTypeModel");
 const Offer = require("../models/offerModel");
 const Shift = require("../models/shiftModel");
 const Staff = require("../models/staffModel");
@@ -80,7 +81,6 @@ async function calculateTheStatistic(staffId) {
 
 function confirmPasswordResetValididty(staff, code, next) {
   if (staff.passwordResetToken != code) {
-    console.log(staff.passwordResetToken, code);
     return next(
       new AppError(
         "Incorrect code, please request a forget password, and try again",
@@ -173,7 +173,7 @@ exports.login = catchError(async (req, res, next) => {
     ],
   });
   const shiftTypes = await ShiftType.findAll({
-    where: { companyId: req.user.companyId },
+    where: { companyId: staff.companyId },
     order: [["startTime", "ASC"]],
   });
 

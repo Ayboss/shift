@@ -1,6 +1,5 @@
 const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../database/database");
-const generateUniqueEntityId = require("../util/generateUniqueEntityId");
 const Staff = require("./staffModel");
 const Company = require("./companyModel");
 
