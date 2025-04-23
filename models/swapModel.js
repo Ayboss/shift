@@ -17,7 +17,7 @@ Swap.init(
     shiftId: {
       type: DataTypes.UUID,
       allowNull: false,
-      unique: true,
+      unique: false,
       references: {
         model: Shift,
         key: "id",
@@ -60,6 +60,15 @@ Swap.init(
       allowNull: true,
       references: {
         model: Staff,
+        key: "id",
+      },
+    },
+    claimerShiftId: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      unique: false,
+      references: {
+        model: Shift,
         key: "id",
       },
     },

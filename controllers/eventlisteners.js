@@ -31,33 +31,6 @@ exports.notifySpecialCondition = (data) => {
     companyId: data.id,
   });
 };
-exports.notifySwapMade = (data) => {
-  // do some computation and add to the data
-  eventListener.emit(Notification, {
-    title: "New Shift has been updated",
-    description: data.description,
-    notifType: "SPECIAL",
-    companyId: data.id,
-  });
-};
-exports.notifySwapAccepted = (data) => {
-  // do some computation and add to the data
-  eventListener.emit(Notification, {
-    title: "New Shift has been updated",
-    description: data.description,
-    notifType: "SPECIAL",
-    companyId: data.id,
-  });
-};
-exports.notifySwapDeclined = (data) => {
-  // do some computation and add to the data
-  eventListener.emit(Notification, {
-    title: "New Shift has been updated",
-    description: data.description,
-    notifType: "SPECIAL",
-    companyId: data.id,
-  });
-};
 
 exports.notifySwapAdminAcepted = (data) => {
   // do some computation and add to the data
@@ -86,4 +59,32 @@ exports.notifyOfferToCircle = (data) => {
     notifType: "SPECIAL",
     companyId: data.id,
   });
+};
+
+exports.notifyOfferIsClaimed = (data) => {
+  console.log("notify that offer has been claimed");
+};
+
+exports.notifyOfferUpdatedByCompany = (data) => {
+  console.log("Notify that Company has made a decision");
+};
+
+exports.notifySwapCreated = (data) => {
+  // do some computation and add to the data
+  console.log("notify that swap has been created");
+};
+
+exports.notifySwapAccepted = (data) => {
+  // do some computation and add to the data
+  console.log("notify  swap has been accepted");
+};
+
+exports.notifySwapDeclined = (data) => {
+  // do some computation and add to the data
+  console.log("notify  swap has been declined");
+};
+
+exports.notifySwapDeleted = (data) => {
+  // do some computation and add to the data
+  console.log("notify  swap has been deleted");
 };

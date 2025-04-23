@@ -48,26 +48,6 @@ Company.init(
       type: DataTypes.STRING,
       allowNull: true,
     },
-    morningShiftStart: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: getTime(8, 0),
-    },
-    morningShiftEnd: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: getTime(12, 0),
-    },
-    eveningShiftStart: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: getTime(16, 0),
-    },
-    eveningShiftEnd: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: getTime(20, 0),
-    },
   },
   {
     sequelize,

@@ -35,10 +35,10 @@ Shift.init(
     details: {
       type: DataTypes.STRING,
     },
-    isMorning: {
-      type: DataTypes.BOOLEAN,
+    type: {
+      type: DataTypes.STRING,
       allowNull: false,
-      defaultValue: true,
+      defaultValue: "morning",
     },
   },
   {

@@ -3,14 +3,23 @@ const Shift = require("../models/shiftModel");
 const catchError = require("../util/catchError");
 const logger = require("../util/logger");
 const AppError = require("../util/appError");
+const { formatShitdata } = require("../util/formatData");
+const ShiftType = require("../models/shiftTypeModel");
 
+// so I return the company type details here
 exports.getAllShifts = catchError(async (req, res, next) => {
   const shifts = await Shift.findAll({
     where: { companyId: req.user.companyId },
   });
+  // find all shifttype belonging to company id, order in terms of start date
+  const shiftTypes = await ShiftType.findAll({
+    where: { companyId: req.user.companyId },
+    order: [["startTime", "ASC"]],
+  });
   return res.status(200).json({
     status: "success",
     data: shifts,
+    shiftTypes: shiftTypes,
   });
 });
 
@@ -19,7 +28,10 @@ exports.getOneShift = catchError(async (req, res, next) => {
   const shift = await Shift.findOne({
     where: { companyId: req.user.companyId, id: shiftId },
   });
-
+  const shiftTypes = await ShiftType.findAll({
+    where: { companyId: req.user.companyId },
+    order: [["startTime", "ASC"]],
+  });
   if (!shift) {
     return next(
       new AppError("This shift for this company does not exist", 400)
@@ -28,18 +40,28 @@ exports.getOneShift = catchError(async (req, res, next) => {
   return res.status(200).json({
     status: "success",
     data: shift,
+    shiftTypes: shiftTypes,
   });
 });
 
 exports.getAllStaffShift = catchError(async (req, res, next) => {
   const { staffId } = req.params;
-  const shifts = await Shift.findAll({
+  let shifts = await Shift.findAll({
     where: { companyId: req.user.companyId, staffId: staffId },
   });
+  const shiftTypes = await ShiftType.findAll({
+    where: { companyId: req.user.companyId },
+    order: [["startTime", "ASC"]],
+  });
+
+  if (req.query.format == "true") {
+    shifts = formatShitdata(shifts, shiftTypes);
+  }
 
   return res.status(200).json({
     status: "success",
     data: shifts,
+    shiftTypes: shiftTypes,
   });
 });
 
@@ -100,7 +122,7 @@ exports.addBulkShift = catchError(async (req, res, next) => {
         continue;
       }
       if (data == "1") {
-        shift.isMorning = isShiftMorning[key];
+        shift.type = isShiftMorning[key];
         if (key in dates) {
           shift.date = dates[key];
         } else {

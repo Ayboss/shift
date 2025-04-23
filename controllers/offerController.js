@@ -5,6 +5,11 @@ const AppError = require("../util/appError");
 const status = require("../util/statusType");
 const Shift = require("../models/shiftModel");
 const Staff = require("../models/staffModel");
+const {
+  notifyOfferIsClaimed,
+  notifyOfferUpdatedByCompany,
+  notifyOfferToCircle,
+} = require("./eventlisteners");
 
 exports.createOffer = catchError(async (req, res, next) => {
   const user = req.user;
@@ -28,6 +33,7 @@ exports.createOffer = catchError(async (req, res, next) => {
     shiftId: shiftId,
     reason: reason,
   });
+  notifyOfferToCircle();
   return res.status(200).json({
     status: "success",
     data: offer,
@@ -102,6 +108,7 @@ exports.claimOffer = catchError(async (req, res, next) => {
   }
 
   await offer.update({ status: status.IN_REVIEW, claimerId: user.id });
+  notifyOfferIsClaimed();
   return res.status(200).json({
     status: "success",
     data: offer,
@@ -127,6 +134,7 @@ exports.updateOfferStatus = catchError(async (req, res, next) => {
     return next(new AppError("This offer is no longer in review", 400));
   }
   await offer.update({ status: statusval });
+  notifyOfferUpdatedByCompany();
   return res.status(200).json({
     status: "success",
     data: offer,

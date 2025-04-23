@@ -4,6 +4,7 @@ const Company = require("../models/companyModel");
 const Notification = require("../models/notificationModel");
 const Offer = require("../models/offerModel");
 const Shift = require("../models/shiftModel");
+const ShiftType = require("../models/shiftTypeModel");
 const Staff = require("../models/staffModel");
 const Swap = require("../models/swapModel");
 const logger = require("../util/logger");
@@ -93,15 +94,26 @@ const create_notification_table = () => {
       logger.error("Notification not created");
     });
 };
+const create_shifttype_table = () => {
+  ShiftType.sync({ alter: true })
+    .then(() => {
+      logger.info("shifttype created");
+    })
+    .catch((err) => {
+      console.log(err);
+      logger.error("shifttype not created");
+    });
+};
 // create_notification_table();
 // create_staff_table();
 exports.init = function () {
   // create_admin_table();
   // create_company_table();
-  create_staff_table();
+  // create_staff_table();
   // create_shift_table();
   // create_offer_table();
   // create_swap_table();
   // create_circle_table();
   // create_notification_table();
+  create_shifttype_table();
 };

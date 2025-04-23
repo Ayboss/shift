@@ -8,6 +8,7 @@ const AppError = require("../util/appError");
 const catchError = require("../util/catchError");
 const { storeImageInCLoud } = require("../util/cloudinary");
 const createJWTToken = require("../util/createJWTToken");
+const { formatShitdata } = require("../util/formatData");
 const { formatStats } = require("../util/formatStats");
 const logger = require("../util/logger");
 const { hashPassword, comparePassword } = require("../util/passwordFunc");
@@ -167,17 +168,15 @@ exports.login = catchError(async (req, res, next) => {
       {
         model: Company,
         as: "company",
-        attributes: [
-          "id",
-          "companyName",
-          // "morningShiftStart",
-          // "morningShiftEnd",
-          // "eveningShiftStart",
-          // "eveningShiftEnd",
-        ],
+        attributes: ["id", "companyName"],
       },
     ],
   });
+  const shiftTypes = await ShiftType.findAll({
+    where: { companyId: req.user.companyId },
+    order: [["startTime", "ASC"]],
+  });
+
   if (!staff) {
     return next(new AppError("staff does not exist", 404));
   }
@@ -189,7 +188,7 @@ exports.login = catchError(async (req, res, next) => {
   staff.password = undefined;
   const token = createJWTToken(staff.id);
 
-  const upcomingshift = await Shift.findAll({
+  let upcomingshift = await Shift.findAll({
     where: {
       staffId: staff.id,
       date: {
@@ -198,14 +197,16 @@ exports.login = catchError(async (req, res, next) => {
     },
     order: [
       ["date", "ASC"],
-      ["isMorning", "DESC"],
+      ["type", "DESC"],
     ],
     limit: 20,
   });
   const mostRecentShift = upcomingshift.length > 0 ? upcomingshift[0] : {};
   const { offerStats, swapStats, claimedOfferStats, claimedSwapStats } =
     await calculateTheStatistic(staff.id);
-
+  if (req.query.format == "true") {
+    upcomingshift = formatShitdata(upcomingshift, shiftTypes);
+  }
   return res.status(200).json({
     status: "success",
     token: token,
@@ -217,6 +218,7 @@ exports.login = catchError(async (req, res, next) => {
       claimedSwapStats,
       upcomingshift,
       mostRecentShift,
+      shiftTypes,
     },
   });
 });
@@ -224,7 +226,7 @@ exports.login = catchError(async (req, res, next) => {
 exports.getCurrentUserWithDashboard = catchError(async (req, res, next) => {
   const staff = req.user;
 
-  const upcomingshift = await Shift.findAll({
+  let upcomingshift = await Shift.findAll({
     where: {
       staffId: staff.id,
       date: {
@@ -233,14 +235,20 @@ exports.getCurrentUserWithDashboard = catchError(async (req, res, next) => {
     },
     order: [
       ["date", "ASC"],
-      ["isMorning", "DESC"],
+      ["type", "DESC"],
     ],
     limit: 20,
+  });
+  const shiftTypes = await ShiftType.findAll({
+    where: { companyId: req.user.companyId },
+    order: [["startTime", "ASC"]],
   });
   const mostRecentShift = upcomingshift.length > 0 ? upcomingshift[0] : {};
   const { offerStats, swapStats, claimedOfferStats, claimedSwapStats } =
     await calculateTheStatistic(staff.id);
-
+  if (req.query.format == "true") {
+    upcomingshift = formatShitdata(upcomingshift, shiftTypes);
+  }
   return res.status(200).json({
     status: "success",
     data: {
@@ -323,7 +331,7 @@ exports.workingAtSameTime = catchError(async (req, res, next) => {
 
   const shift = await Shift.findOne({ where: { id: shiftId } });
   const shifts = await Shift.findAll({
-    where: { date: shift.date, isMorning: shift.isMorning },
+    where: { date: shift.date, type: shift.type },
     include: [
       {
         model: Staff,
