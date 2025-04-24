@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require("cors");
 const errorController = require("./controllers/errorController");
 const routers = require("./router/index");
 // adding all event listener
