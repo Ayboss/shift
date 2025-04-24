@@ -18,6 +18,7 @@ app.use("/api/v1/offer", routers.offerRouter);
 app.use("/api/v1/swap", routers.swapRouter);
 app.use("/api/v1/circle", routers.circleRouter);
 app.use("/api/v1/notification", routers.notificationRouter);
+app.use("/api/v1/shifttype", routers.shiftTypeRouter);
 
 app.use(errorController);
 

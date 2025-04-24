@@ -107,7 +107,7 @@ exports.addBulkShift = catchError(async (req, res, next) => {
   }
   for (let key in shiftdata[1]) {
     time = shiftdata[1][key];
-    isShiftMorning[key] = time.toLowerCase() == "glo";
+    isShiftMorning[key] = time.toLowerCase();
   }
 
   for (let i = 2; i < shiftdata.length; i++) {
@@ -136,6 +136,7 @@ exports.addBulkShift = catchError(async (req, res, next) => {
     }
   }
 
+  // await Shift.destroy({ where: { companyId: company.id } });
   await Shift.bulkCreate(shifts);
 
   return res.status(200).json({
