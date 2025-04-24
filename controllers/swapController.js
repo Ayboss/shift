@@ -62,7 +62,7 @@ exports.getAllSwapForUser = catchError(async (req, res, next) => {
   const { status } = req.query;
   const whereClause = {
     companyId: user.companyId,
-    staffId: user.id,
+    [Op.or]: [{ staffId: user.id }, { claimerId: user.id }],
   };
   if (status) {
     whereClause.status = status;
@@ -89,6 +89,16 @@ exports.getAllSwapForUser = catchError(async (req, res, next) => {
         as: "claimer",
         attributes: attribute,
       },
+      {
+        model: Shift,
+        as: "staffShift",
+        attributes: ["date", "type"],
+      },
+      {
+        model: Shift,
+        as: "claimerShift",
+        attributes: ["date", "type"],
+      },
     ],
   });
 
@@ -113,9 +123,42 @@ exports.getAllSwap = catchError(async (req, res, next) => {
 exports.getOneSwapForUser = catchError(async (req, res, next) => {
   const { swapId } = req.params;
   const user = req.user;
-
+  const attribute = [
+    "id",
+    "fullName",
+    "phoneNumber",
+    "email",
+    "image",
+    "isImageMemoji",
+  ];
   const swap = await Swap.findOne({
-    where: { companyId: user.companyId, id: swapId, staffId: user.id },
+    where: {
+      companyId: user.companyId,
+      id: swapId,
+      [Op.or]: [{ staffId: user.id }, { claimerId: user.id }],
+    },
+    include: [
+      {
+        model: Staff,
+        as: "staff",
+        attributes: attribute,
+      },
+      {
+        model: Staff,
+        as: "claimer",
+        attributes: attribute,
+      },
+      {
+        model: Shift,
+        as: "staffShift",
+        attributes: ["date", "type"],
+      },
+      {
+        model: Shift,
+        as: "claimerShift",
+        attributes: ["date", "type"],
+      },
+    ],
   });
 
   if (!swap) {
@@ -204,7 +247,8 @@ exports.deleteSwap = catchError(async (req, res, next) => {
 // update by company
 exports.updateSwapStatus = catchError(async (req, res, next) => {
   const company = req.user;
-  const { status: statusval, swapId } = req.params;
+  const { swapId } = req.params;
+  const statusval = req.body.status;
   if (statusval != status.ACCEPTED && statusval != status.DECLINED) {
     return next(
       new AppError(

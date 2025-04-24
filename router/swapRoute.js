@@ -40,7 +40,7 @@ router.delete(
 );
 
 router.post(
-  "/:swapId/:status",
+  "/:swapId",
   authController.protectCompany,
   swapController.updateSwapStatus
 );

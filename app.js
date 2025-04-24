@@ -7,6 +7,7 @@ require("./controllers/eventlisteners");
 app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cors());
 
 app.use("/api/v1/admin", routers.adminRouter);
 app.use("/api/v1/company", routers.companyRouter);

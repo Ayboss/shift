@@ -172,10 +172,6 @@ exports.login = catchError(async (req, res, next) => {
       },
     ],
   });
-  const shiftTypes = await ShiftType.findAll({
-    where: { companyId: staff.companyId },
-    order: [["startTime", "ASC"]],
-  });
 
   if (!staff) {
     return next(new AppError("staff does not exist", 404));
@@ -187,6 +183,10 @@ exports.login = catchError(async (req, res, next) => {
 
   staff.password = undefined;
   const token = createJWTToken(staff.id);
+  const shiftTypes = await ShiftType.findAll({
+    where: { companyId: staff.companyId },
+    order: [["startTime", "ASC"]],
+  });
 
   let upcomingshift = await Shift.findAll({
     where: {

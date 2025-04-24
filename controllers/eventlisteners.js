@@ -56,16 +56,6 @@ exports.notifySwapAdminDeclined = (data) => {
 };
 
 exports.notifyOfferToCircle = async (staff, offerid) => {
-  // notify user has created offer
-  eventListener.emit(notificationEvent, {
-    notifType: "OFFER",
-    title: "New Offer has been created",
-    description: `You Just created an offer`,
-    staffId: staff.id,
-    companyId: staff.companyId,
-    redirectId: offerid,
-  });
-
   const circles = await Circle.findAll({ where: { memberId: staff.id } });
   circles.forEach((circle) => {
     // do some computation and add to the staff
@@ -86,7 +76,7 @@ exports.notifyOfferIsClaimed = async (staff, offer) => {
   eventListener.emit(notificationEvent, {
     notifType: "OFFER",
     title: "Offer claimed",
-    description: `Your Offer has been claimed by ${staff.fullName}`,
+    description: `${staff.fullName} has claimed your offer for the date`,
     staffId: offer.staffId,
     companyId: staff.companyId,
     redirectId: offer.id,
@@ -109,7 +99,7 @@ exports.notifyOfferUpdatedByCompany = (offer, statusval) => {
       : "Offer Declined by company";
   const description =
     statusval == status.ACCEPTED
-      ? "Your offer has been successfully transfered"
+      ? "Admin has succesfully approved your offer for date"
       : "Your request to make an offer has been declined";
   eventListener.emit(notificationEvent, {
     notifType: "OFFER",

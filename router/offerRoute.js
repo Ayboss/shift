@@ -18,6 +18,6 @@ router.patch(
 );
 
 router.use(authController.protectCompany);
-router.patch("/:offerId/:status", offerController.updateOfferStatus); // update offer status
+router.patch("/:offerId", offerController.updateOfferStatus); // update offer status
 
 module.exports = router;

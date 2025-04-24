@@ -121,7 +121,8 @@ exports.claimOffer = catchError(async (req, res, next) => {
 // update by company
 exports.updateOfferStatus = catchError(async (req, res, next) => {
   const company = req.user;
-  const { status: statusval, offerId } = req.params;
+  const { offerId } = req.params;
+  const statusval = req.body.status;
   if (statusval != status.ACCEPTED && statusval != status.DECLINED) {
     return next(
       new AppError(
@@ -136,7 +137,7 @@ exports.updateOfferStatus = catchError(async (req, res, next) => {
   if (!offer) {
     return next(new AppError("This offer is no longer in review", 400));
   }
-  if (statusval != status.ACCEPTED) {
+  if (statusval == status.ACCEPTED) {
     await Shift.update(
       { staffId: offer.claimerId },
       { where: { id: offer.shiftId } }
