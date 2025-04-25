@@ -1,0 +1,5 @@
+- on bulk update , insert only type that exist in shifttype
+- handle pagination
+- email for sms
+- notification for other part
+- push notification

@@ -10,6 +10,15 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
+app.get("/test", (req, res, next) => {
+  res.status(200).json({
+    status: "success",
+    data: {
+      name: "ayobami",
+      email: "bamiayo90@gmail.com",
+    },
+  });
+});
 app.use("/api/v1/admin", routers.adminRouter);
 app.use("/api/v1/company", routers.companyRouter);
 app.use("/api/v1/staff", routers.staffRouter);
