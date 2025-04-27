@@ -13,7 +13,14 @@ exports.getUserCircle = catchError(async (req, res, next) => {
       {
         model: Staff,
         as: "member",
-        attributes: ["id", "fullName", "email"],
+        attributes: [
+          "id",
+          "fullName",
+          "email",
+          "phoneNumber",
+          "image",
+          "isImageMemoji",
+        ],
       },
     ],
   });

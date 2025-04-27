@@ -365,7 +365,9 @@ exports.workingAtSameTime = catchError(async (req, res, next) => {
 
 exports.getStaffs = catchError(async (req, res, next) => {
   const staff = req.user;
-  const staffs = await Staff.findAll({ where: { companyId: staff.companyId } });
+  const staffs = await Staff.findAll({
+    where: { companyId: staff.companyId, id: { [Op.not]: staff.id } },
+  });
 
   return res.status(200).json({
     status: "success",
