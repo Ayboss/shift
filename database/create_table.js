@@ -8,6 +8,7 @@ const ShiftType = require("../models/shiftTypeModel");
 const Staff = require("../models/staffModel");
 const Swap = require("../models/swapModel");
 const logger = require("../util/logger");
+const sequelize = require("./database");
 
 const create_admin_table = () => {
   Admin.sync({ alter: true })
@@ -104,6 +105,16 @@ const create_shifttype_table = () => {
       logger.error("shifttype not created");
     });
 };
+
+const runRawSQLQueries = async () => {
+  try {
+    await sequelize.query(`ALTER TABLE staffs DROP INDEX fullName_2;`);
+    console.log("Successfully dropped fullName unique index");
+  } catch (error) {
+    console.error("Failed to drop fullName unique index:", error);
+  }
+};
+
 // create_notification_table();
 // create_staff_table();
 exports.init = function () {
@@ -115,5 +126,6 @@ exports.init = function () {
   // create_swap_table();
   // create_circle_table();
   // create_notification_table();
-  create_shifttype_table();
+  // create_shifttype_table();
+  // runRawSQLQueries();
 };

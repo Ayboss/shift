@@ -3,3 +3,4 @@
 - email for sms
 - notification for other part
 - push notification
+- add the logging for server errors

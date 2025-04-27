@@ -100,6 +100,7 @@ function confirmPasswordResetValididty(staff, code, next) {
 }
 
 exports.signup = catchError(async (req, res, next) => {
+  // return res.send("hiii ");
   const { email, fullName, shiftId } = req.body;
   if (!email || !fullName || !shiftId) {
     return next(new AppError("email, shiftid and fullname  is required", 400));
@@ -168,7 +169,7 @@ exports.login = catchError(async (req, res, next) => {
       {
         model: Company,
         as: "company",
-        attributes: ["id", "companyName"],
+        attributes: ["id", "companyName", "companyEmail"],
       },
     ],
   });
@@ -224,8 +225,16 @@ exports.login = catchError(async (req, res, next) => {
 });
 
 exports.getCurrentUserWithDashboard = catchError(async (req, res, next) => {
-  const staff = req.user;
-
+  const staff = await Staff.findOne({
+    where: { id: req.user.id, verified: true },
+    include: [
+      {
+        model: Company,
+        as: "company",
+        attributes: ["id", "companyName", "companyEmail"],
+      },
+    ],
+  });
   let upcomingshift = await Shift.findAll({
     where: {
       staffId: staff.id,
@@ -417,7 +426,7 @@ exports.verifyStaffCompany = catchError(async (req, res, next) => {
   }
   return res.status(200).json({
     status: "success",
-    message: "staff information",
+    message: "staff information require",
     data: staff.company,
   });
 });
