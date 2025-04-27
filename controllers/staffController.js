@@ -406,3 +406,18 @@ exports.uploadStaffImage = catchError(async (req, res, next) => {
     data: staff,
   });
 });
+
+exports.verifyStaffCompany = catchError(async (req, res, next) => {
+  const staff = await Staff.findOne({
+    where: { id: req.params.staffId },
+    include: { model: Company, as: "company" },
+  });
+  if (!staff) {
+    return next(new AppError("staff not found", 404));
+  }
+  return res.status(200).json({
+    status: "success",
+    message: "staff information",
+    data: staff.company,
+  });
+});
