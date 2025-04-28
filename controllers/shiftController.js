@@ -5,6 +5,7 @@ const logger = require("../util/logger");
 const AppError = require("../util/appError");
 const { formatShitdata } = require("../util/formatData");
 const ShiftType = require("../models/shiftTypeModel");
+const Staff = require("../models/staffModel");
 
 // so I return the company type details here
 exports.getAllShifts = catchError(async (req, res, next) => {
@@ -110,6 +111,7 @@ exports.addBulkShift = catchError(async (req, res, next) => {
     isShiftMorning[key] = time.toLowerCase();
   }
 
+  const existingstaff = new Set();
   for (let i = 2; i < shiftdata.length; i++) {
     // logger.info(shiftdata[i]);
 
@@ -130,6 +132,11 @@ exports.addBulkShift = catchError(async (req, res, next) => {
         }
       }
       if (!shift.date) continue;
+      if (!existingstaff.has(shift.date)) {
+        const newstaff = await Staff.findOne({ where: { id: staffId } });
+        if (!newstaff) continue;
+        existingstaff.add(newstaff.id);
+      }
       shift.staffId = staffId;
       shift.companyId = company.id;
       shifts.push(shift);
