@@ -8,7 +8,7 @@ router.get("/", authController.protectStaff, swapController.getAllSwapForUser);
 router.get(
   "/company",
   authController.protectCompany,
-  swapController.getAllSwap
+  swapController.getAllSwapForCompany
 );
 
 router.get(

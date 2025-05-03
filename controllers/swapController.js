@@ -11,62 +11,51 @@ const {
   notifySwapDeclined,
 } = require("./eventlisteners");
 
-exports.createSwap = catchError(async (req, res, next) => {
-  // you are changing the id of two shifts basically
-  const user = req.user;
-  const { shiftId, claimerShiftId, reason } = req.body;
-
-  const shift = await Shift.findOne({
-    where: { staffId: user.id, id: shiftId },
+const getSwap = catchError(async (whereclause, res, next) => {
+  const attribute = [
+    "id",
+    "fullName",
+    "phoneNumber",
+    "email",
+    "image",
+    "isImageMemoji",
+  ];
+  const swap = await Swap.findOne({
+    where: whereclause,
+    include: [
+      {
+        model: Staff,
+        as: "staff",
+        attributes: attribute,
+      },
+      {
+        model: Staff,
+        as: "claimer",
+        attributes: attribute,
+      },
+      {
+        model: Shift,
+        as: "staffShift",
+        attributes: ["date", "type"],
+      },
+      {
+        model: Shift,
+        as: "claimerShift",
+        attributes: ["date", "type"],
+      },
+    ],
   });
-  if (!shift) {
-    return next(new AppError("This shift does not exist for this user", 400));
-  }
 
-  const claimershift = await Shift.findOne({
-    where: { companyId: user.companyId, id: claimerShiftId },
-  });
-  if (!shift) {
-    return next(new AppError("This shift does not exist for this user", 400));
+  if (!swap) {
+    return next(new AppError("This swap for this company does not exist", 400));
   }
-
-  if (!claimershift) {
-    return next(new AppError("This claimershift does not exist", 400));
-  }
-
-  const prevShift = await Swap.findOne({
-    where: {
-      [Op.or]: [{ shiftId: shiftId }, { shiftId: claimerShiftId }],
-    },
-  });
-  if (prevShift) {
-    return next(new AppError("Shift already exist as an swap", 400));
-  }
-  const swap = await Swap.create({
-    companyId: user.companyId,
-    staffId: user.id,
-    claimerId: claimershift.staffId,
-    shiftId: shiftId,
-    reason: reason,
-    claimerShiftId: claimerShiftId,
-  });
-  notifySwapCreated();
   return res.status(200).json({
     status: "success",
     data: swap,
   });
 });
 
-exports.getAllSwapForUser = catchError(async (req, res, next) => {
-  const user = req.user;
-  const { status } = req.query;
-  const whereClause = {
-    companyId: user.companyId,
-    [Op.or]: [{ staffId: user.id }, { claimerId: user.id }],
-  };
-  if (status) {
-    whereClause.status = status;
-  }
+const getAllSwap = catchError(async (whereClause, res) => {
   const attribute = [
     "id",
     "fullName",
@@ -108,82 +97,89 @@ exports.getAllSwapForUser = catchError(async (req, res, next) => {
   });
 });
 
-exports.getAllSwap = catchError(async (req, res, next) => {
-  const company = req.user;
-  const swaps = await Swap.findAll({
-    where: { companyId: company.id },
-  });
-
-  return res.status(200).json({
-    status: "success",
-    data: swaps,
-  });
-});
-
-exports.getOneSwapForUser = catchError(async (req, res, next) => {
-  const { swapId } = req.params;
+exports.createSwap = catchError(async (req, res, next) => {
+  // you are changing the id of two shifts basically
   const user = req.user;
-  const attribute = [
-    "id",
-    "fullName",
-    "phoneNumber",
-    "email",
-    "image",
-    "isImageMemoji",
-  ];
-  const swap = await Swap.findOne({
-    where: {
-      companyId: user.companyId,
-      id: swapId,
-      [Op.or]: [{ staffId: user.id }, { claimerId: user.id }],
-    },
-    include: [
-      {
-        model: Staff,
-        as: "staff",
-        attributes: attribute,
-      },
-      {
-        model: Staff,
-        as: "claimer",
-        attributes: attribute,
-      },
-      {
-        model: Shift,
-        as: "staffShift",
-        attributes: ["date", "type"],
-      },
-      {
-        model: Shift,
-        as: "claimerShift",
-        attributes: ["date", "type"],
-      },
-    ],
-  });
+  const { shiftId, claimerShiftId, reason } = req.body;
 
-  if (!swap) {
-    return next(new AppError("This swap for this company does not exist", 400));
+  const shift = await Shift.findOne({
+    where: { staffId: user.id, id: shiftId },
+  });
+  if (!shift) {
+    return next(new AppError("This shift does not exist for this user", 400));
   }
+
+  const claimershift = await Shift.findOne({
+    where: { companyId: user.companyId, id: claimerShiftId },
+  });
+  if (!claimershift) {
+    return next(new AppError("This claimershift does not exist", 400));
+  }
+
+  const prevShift = await Swap.findOne({
+    where: {
+      [Op.or]: [{ shiftId: shiftId }, { shiftId: claimerShiftId }],
+    },
+  });
+  if (prevShift) {
+    return next(new AppError("Shift already exist as an swap", 400));
+  }
+  const swap = await Swap.create({
+    companyId: user.companyId,
+    staffId: user.id,
+    claimerId: claimershift.staffId,
+    shiftId: shiftId,
+    reason: reason,
+    claimerShiftId: claimerShiftId,
+  });
+  notifySwapCreated();
   return res.status(200).json({
     status: "success",
     data: swap,
   });
+});
+
+exports.getAllSwapForUser = catchError(async (req, res, next) => {
+  const user = req.user;
+  const { status } = req.query;
+  const whereClause = {
+    companyId: user.companyId,
+    [Op.or]: [{ staffId: user.id }, { claimerId: user.id }],
+  };
+  if (status) {
+    whereClause.status = status;
+  }
+  getAllSwap(whereClause, res);
+});
+
+exports.getAllSwapForCompany = catchError(async (req, res, next) => {
+  const company = req.user;
+  const whereClause = {
+    companyId: company.id,
+  };
+  const { status } = req.query;
+  if (status) {
+    whereClause.status = status;
+  }
+  getAllSwap(whereClause, res);
+});
+
+exports.getOneSwapForUser = catchError(async (req, res, next) => {
+  const user = req.user;
+  const { swapId } = req.params;
+  const whereclause = {
+    companyId: user.companyId,
+    id: swapId,
+    [Op.or]: [{ staffId: user.id }, { claimerId: user.id }],
+  };
+  getSwap(whereclause, res, next);
 });
 
 exports.getOneSwap = catchError(async (req, res, next) => {
   const { swapId } = req.params;
   const company = req.user;
-
-  const swap = await Swap.findOne({
-    where: { companyId: company.id, id: swapId },
-  });
-  if (!swap) {
-    return next(new AppError("This swap for this company does not exist", 400));
-  }
-  return res.status(200).json({
-    status: "success",
-    data: swap,
-  });
+  const whereclause = { companyId: company.id, id: swapId };
+  getSwap(whereclause, res, next);
 });
 
 exports.acceptSwap = catchError(async (req, res, next) => {
