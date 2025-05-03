@@ -268,6 +268,7 @@ exports.getCurrentUserWithDashboard = catchError(async (req, res, next) => {
       claimedSwapStats,
       upcomingshift,
       mostRecentShift,
+      shiftTypes,
     },
   });
 });
