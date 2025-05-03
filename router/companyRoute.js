@@ -8,6 +8,7 @@ router.post("/login", companyController.login);
 
 router.use(authController.protectCompany);
 router.get("/dashboard", companyController.getDashboardDetails);
+router.get("/workers", companyController.getWorkerDetails);
 router.post("/staff", companyController.addStaff);
 router.get("/staff", companyController.getStaff);
 router.get("/staff/:staffId", companyController.getOneStaff);

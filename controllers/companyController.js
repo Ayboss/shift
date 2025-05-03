@@ -11,6 +11,92 @@ const Swap = require("../models/swapModel");
 const Offer = require("../models/offerModel");
 const sequelize = require("../database/database");
 const { formatStats } = require("../util/formatStats");
+const { fn, col, literal } = require("sequelize");
+const Shift = require("../models/shiftModel");
+
+const statDetailsClause = {
+  attributes: {
+    include: [
+      // ✅ Count shifts
+      [fn("COUNT", col("shifts.id")), "shiftsCount"],
+
+      // ✅ Count offers grouped by status
+      [
+        fn(
+          "SUM",
+          literal(`CASE WHEN offers.status = 'OPEN' THEN 1 ELSE 0 END`)
+        ),
+        "offersOpen",
+      ],
+      [
+        fn(
+          "SUM",
+          literal(`CASE WHEN offers.status = 'IN_REVIEW' THEN 1 ELSE 0 END`)
+        ),
+        "offersReview",
+      ],
+      [
+        fn(
+          "SUM",
+          literal(`CASE WHEN offers.status = 'ACCEPTED' THEN 1 ELSE 0 END`)
+        ),
+        "offersAccepted",
+      ],
+      [
+        fn(
+          "SUM",
+          literal(`CASE WHEN offers.status = 'DECLINED' THEN 1 ELSE 0 END`)
+        ),
+        "offersDeclined",
+      ],
+
+      // ✅ Count swaps grouped by status
+      [
+        fn("SUM", literal(`CASE WHEN swaps.status = 'OPEN' THEN 1 ELSE 0 END`)),
+        "swapsOpen",
+      ],
+      [
+        fn(
+          "SUM",
+          literal(`CASE WHEN swaps.status = 'IN_REVIEW' THEN 1 ELSE 0 END`)
+        ),
+        "swapsReview",
+      ],
+      [
+        fn(
+          "SUM",
+          literal(`CASE WHEN swaps.status = 'ACCEPTED' THEN 1 ELSE 0 END`)
+        ),
+        "swapsAccepted",
+      ],
+      [
+        fn(
+          "SUM",
+          literal(`CASE WHEN swaps.status = 'DECLINED' THEN 1 ELSE 0 END`)
+        ),
+        "swapsDeclined",
+      ],
+    ],
+  },
+  include: [
+    {
+      model: Shift,
+      as: "shifts",
+      attributes: [],
+    },
+    {
+      model: Offer,
+      as: "offers",
+      attributes: [],
+    },
+    {
+      model: Swap,
+      as: "swaps",
+      attributes: [],
+    },
+  ],
+  group: ["Staff.id"],
+};
 
 exports.signup = catchError(async (req, res, next) => {
   if (req.body.password && req.body.password.length < 8) {
@@ -104,6 +190,38 @@ exports.getDashboardDetails = catchError(async (req, res, next) => {
   });
 });
 
+exports.getWorkerDetails = catchError(async (req, res, next) => {
+  const company = req.user;
+  const workerstat = await Staff.findOne({
+    where: {
+      companyId: company.id,
+    },
+    attributes: [
+      [
+        sequelize.literal(
+          `COUNT(CASE WHEN verified = true AND blocked = false THEN 1 END)`
+        ),
+        "verifiedCount",
+      ],
+      [
+        sequelize.literal(
+          `COUNT(CASE WHEN verified = false AND blocked = false THEN 1 END)`
+        ),
+        "nonVerifiedCount",
+      ],
+      [
+        sequelize.literal(`COUNT(CASE WHEN blocked = true THEN 1 END)`),
+        "blockedCount",
+      ],
+    ],
+    raw: true,
+  });
+  res.status(200).json({
+    status: "success",
+    data: workerstat,
+  });
+});
+
 exports.addStaff = catchError(async (req, res, next) => {
   const company = req.user;
   if (!req.body.email) {
@@ -128,7 +246,10 @@ exports.addStaff = catchError(async (req, res, next) => {
 
 exports.getStaff = catchError(async (req, res, next) => {
   const company = req.user;
-  const staffs = await Staff.findAll({ where: { companyId: company.id } });
+  const staffs = await Staff.findAll({
+    where: { companyId: company.id },
+    ...statDetailsClause,
+  });
 
   return res.status(200).json({
     status: "success",
@@ -141,6 +262,7 @@ exports.getOneStaff = catchError(async (req, res, next) => {
   const staffId = req.params.staffId;
   const staff = await Staff.findOne({
     where: { companyId: company.id, id: staffId },
+    ...statDetailsClause,
   });
   if (!staff) {
     return next(new AppError("this staff does not exist", 404));

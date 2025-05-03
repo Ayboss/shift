@@ -84,5 +84,6 @@ Swap.belongsTo(Staff, { as: "staff", foreignKey: "staffId" });
 Swap.belongsTo(Staff, { as: "claimer", foreignKey: "claimerId" });
 Swap.belongsTo(Shift, { as: "staffShift", foreignKey: "shiftId" });
 Swap.belongsTo(Shift, { as: "claimerShift", foreignKey: "claimerShiftId" });
+Staff.hasMany(Swap, { as: "swaps", foreignKey: "staffId" });
 
 module.exports = Swap;

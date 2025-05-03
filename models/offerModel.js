@@ -72,5 +72,6 @@ Offer.init(
 
 Offer.belongsTo(Staff, { as: "staff", foreignKey: "staffId" });
 Offer.belongsTo(Staff, { as: "claimer", foreignKey: "claimerId" });
+Staff.hasMany(Offer, { as: "offers", foreignKey: "staffId" });
 
 module.exports = Offer;
