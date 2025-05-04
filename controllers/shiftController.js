@@ -26,6 +26,16 @@ exports.getOneShift = catchError(async (req, res, next) => {
   const { shiftId } = req.params;
   const shift = await Shift.findOne({
     where: { companyId: req.user.companyId, id: shiftId },
+    include: [
+      {
+        model: Offer,
+        attributes: ["id", "status"],
+      },
+      {
+        model: Swap,
+        attributes: ["id", "status"],
+      },
+    ],
   });
   const shiftTypes = await ShiftType.findAll({
     where: { companyId: req.user.companyId },

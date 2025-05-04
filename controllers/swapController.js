@@ -231,6 +231,11 @@ exports.deleteSwap = catchError(async (req, res, next) => {
   if (!swap) {
     return next(new AppError("This swap does not exist", 400));
   }
+  if (swap.status == status.ACCEPTED || swap.status == status.ACCEPTED) {
+    return next(
+      new AppError("This swap has been processed and cannot be deleted", 400)
+    );
+  }
   await swap.destroy();
   return res.status(200).json({
     status: "success",
