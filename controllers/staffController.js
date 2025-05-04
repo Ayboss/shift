@@ -438,9 +438,11 @@ exports.getOffersAndSwaps = catchError(async (req, res, next) => {
   }
   const offers = await Offer.findAll({
     where: whereClause,
+    raw: true,
   });
   const swaps = await Swap.findAll({
     where: whereClauseswap,
+    raw: true,
   });
 
   // 🔥 Tag each with a type so you know which is which
