@@ -39,7 +39,7 @@ const associateModels = (models) => {
   //   OFFER
   Offer.belongsTo(Staff, { as: "staff", foreignKey: "staffId" });
   Offer.belongsTo(Staff, { as: "claimer", foreignKey: "claimerId" });
-  Offer.belongsTo(Shift, { foreignKey: "shiftId" });
+  Offer.belongsTo(Shift, { as: "shift", foreignKey: "shiftId" });
 
   // SWAPS
   Swap.belongsTo(Staff, { as: "staff", foreignKey: "staffId" });

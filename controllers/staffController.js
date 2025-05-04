@@ -428,6 +428,14 @@ exports.getOffersAndSwaps = catchError(async (req, res, next) => {
   const whereClause = {
     companyId: user.companyId,
   };
+  const attribute = [
+    "id",
+    "fullName",
+    "phoneNumber",
+    "email",
+    "image",
+    "isImageMemoji",
+  ];
   const whereClauseswap = {
     companyId: user.companyId,
     [Op.or]: [{ staffId: user.id }, { claimerId: user.id }],
@@ -438,21 +446,59 @@ exports.getOffersAndSwaps = catchError(async (req, res, next) => {
   }
   const offers = await Offer.findAll({
     where: whereClause,
-    raw: true,
+    include: [
+      {
+        model: Staff,
+        as: "staff",
+        attributes: attribute,
+      },
+      {
+        model: Staff,
+        as: "claimer",
+        attributes: attribute,
+      },
+      {
+        model: Shift,
+        as: "shift",
+        attributes: ["date", "type"],
+      },
+    ],
   });
   const swaps = await Swap.findAll({
     where: whereClauseswap,
-    raw: true,
+    include: [
+      {
+        model: Staff,
+        as: "staff",
+        attributes: attribute,
+      },
+      {
+        model: Staff,
+        as: "claimer",
+        attributes: attribute,
+      },
+      {
+        model: Shift,
+        as: "staffShift",
+        attributes: ["date", "type"],
+      },
+      {
+        model: Shift,
+        as: "claimerShift",
+        attributes: ["date", "type"],
+      },
+    ],
   });
 
+  console.log(swaps);
   // 🔥 Tag each with a type so you know which is which
   const offersWithType = offers.map((offer) => ({
-    ...offer,
+    ...offer.dataValues,
     type: "OFFER",
   }));
 
   const swapsWithType = swaps.map((swap) => ({
-    ...swap,
+    ...swap.dataValues,
     type: "SWAP",
   }));
 
