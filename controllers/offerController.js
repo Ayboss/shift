@@ -70,6 +70,11 @@ exports.getAllOffer = catchError(async (req, res, next) => {
         as: "claimer",
         attributes: attribute,
       },
+      {
+        model: Shift,
+        as: "shift",
+        attributes: ["date", "type"],
+      },
     ],
   });
 
@@ -83,6 +88,23 @@ exports.getOneOffer = catchError(async (req, res, next) => {
   const { offerId } = req.params;
   const offer = await Offer.findOne({
     where: { companyId: req.user.companyId, id: offerId },
+    include: [
+      {
+        model: Staff,
+        as: "staff",
+        attributes: attribute,
+      },
+      {
+        model: Staff,
+        as: "claimer",
+        attributes: attribute,
+      },
+      {
+        model: Shift,
+        as: "shift",
+        attributes: ["date", "type"],
+      },
+    ],
   });
   if (!offer) {
     return next(
