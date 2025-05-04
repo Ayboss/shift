@@ -8,6 +8,15 @@ const {
 } = require("./eventlisteners");
 const { Staff, Shift, Offer } = require("../models");
 
+const attribute = [
+  "id",
+  "fullName",
+  "phoneNumber",
+  "email",
+  "image",
+  "isImageMemoji",
+];
+
 exports.createOffer = catchError(async (req, res, next) => {
   const user = req.user;
   const { shiftId, reason } = req.body;
@@ -48,15 +57,7 @@ exports.getAllOffer = catchError(async (req, res, next) => {
   if (status) {
     whereClause.status = status;
   }
-  // filter by status
-  const attribute = [
-    "id",
-    "fullName",
-    "phoneNumber",
-    "email",
-    "image",
-    "isImageMemoji",
-  ];
+
   const offers = await Offer.findAll({
     where: whereClause,
     include: [
