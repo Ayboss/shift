@@ -23,14 +23,15 @@ router.use(authController.protectStaff);
 router.post("/password/set", staffController.setPassword);
 
 router.use(authController.isVerified);
+router.get("/offerswap", staffController.getOffersAndSwaps);
 router.get("/working/:shiftId", staffController.workingAtSameTime);
 router.get("/all", staffController.getStaffs);
 router.get("/:staffId", staffController.getOneStaff);
-router.patch("/", staffController.updateStaff);
 router.patch(
   "/profileimg",
   uploadProfileImage,
   staffController.uploadStaffImage
 );
+router.patch("/", staffController.updateStaff);
 router.get("/", staffController.getCurrentUserWithDashboard);
 module.exports = router;

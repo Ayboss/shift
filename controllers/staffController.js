@@ -421,3 +421,45 @@ exports.verifyStaffCompany = catchError(async (req, res, next) => {
     data: staff.company,
   });
 });
+
+exports.getOffersAndSwaps = catchError(async (req, res, next) => {
+  const user = req.user;
+  const { status } = req.query;
+  const whereClause = {
+    companyId: user.companyId,
+  };
+  const whereClauseswap = {
+    companyId: user.companyId,
+    [Op.or]: [{ staffId: user.id }, { claimerId: user.id }],
+  };
+  if (status) {
+    whereClause.status = status;
+    whereClauseswap.status = status;
+  }
+  const offers = await Offer.findAll({
+    where: whereClause,
+  });
+  const swaps = await Swap.findAll({
+    where: whereClauseswap,
+  });
+
+  // 🔥 Tag each with a type so you know which is which
+  const offersWithType = offers.map((offer) => ({
+    ...offer,
+    type: "OFFER",
+  }));
+
+  const swapsWithType = swaps.map((swap) => ({
+    ...swap,
+    type: "SWAP",
+  }));
+
+  // 🔥 Combine and sort by createdAt
+  const combined = [...offersWithType, ...swapsWithType].sort(
+    (a, b) => new Date(b.createdAt) - new Date(a.createdAt) // descending order (newest first)
+  );
+  res.status(200).json({
+    status: "success",
+    data: combined,
+  });
+});
