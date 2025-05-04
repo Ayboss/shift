@@ -1,6 +1,5 @@
 const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../database/database");
-const Company = require("./companyModel"); // Import Company model
 const generateUniqueEntityId = require("../util/generateUniqueEntityId");
 class Staff extends Model {}
 
@@ -37,7 +36,7 @@ Staff.init(
       type: DataTypes.STRING,
       allowNull: true,
       references: {
-        model: Company,
+        model: "companies",
         key: "id",
       },
       onDelete: "SET NULL",
@@ -105,8 +104,5 @@ Staff.init(
     },
   }
 );
-
-Company.hasMany(Staff, { foreignKey: "companyId", as: "staff" });
-Staff.belongsTo(Company, { foreignKey: "companyId", as: "company" });
 
 module.exports = Staff;

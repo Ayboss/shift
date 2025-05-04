@@ -1,16 +1,18 @@
-const Admin = require("../models/adminModel");
 const catchError = require("../util/catchError");
 const { hashPassword, comparePassword } = require("../util/passwordFunc");
 const createJWTToken = require("../util/createJWTToken");
 const AppError = require("../util/appError");
-const Company = require("../models/companyModel");
 const companyController = require("../controllers/companyController");
-const Staff = require("../models/staffModel");
-const Offer = require("../models/offerModel");
-const Swap = require("../models/swapModel");
 const sequelize = require("../database/database");
 const { formatStats } = require("../util/formatStats");
-const Notification = require("../models/notificationModel");
+const {
+  Notification,
+  Offer,
+  Swap,
+  Staff,
+  Company,
+  Admin,
+} = require("../models");
 
 exports.login = catchError(async (req, res, next) => {
   const { email, password } = req.body;

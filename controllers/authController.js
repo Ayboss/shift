@@ -2,9 +2,7 @@ const jwt = require("jsonwebtoken");
 const { promisify } = require("util");
 const AppError = require("../util/appError");
 const catchError = require("../util/catchError");
-const Company = require("../models/companyModel");
-const Staff = require("../models/staffModel");
-const Admin = require("../models/adminModel");
+const { Admin, Staff, Company } = require("../models");
 
 const checkAndDecode = async (req, next) => {
   try {

@@ -1,7 +1,6 @@
 // models/ShiftType.js
 const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../database/database");
-const Company = require("./companyModel");
 
 class ShiftType extends Model {}
 
@@ -16,7 +15,7 @@ ShiftType.init(
       type: DataTypes.STRING,
       allowNull: false,
       references: {
-        model: Company,
+        model: "companies",
         key: "id",
       },
     },
@@ -46,9 +45,5 @@ ShiftType.init(
     ],
   }
 );
-
-// Optional: association
-Company.hasMany(ShiftType, { foreignKey: "companyId", as: "shiftTypes" });
-ShiftType.belongsTo(Company, { foreignKey: "companyId", as: "company" });
 
 module.exports = ShiftType;

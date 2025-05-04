@@ -1,4 +1,4 @@
-const Notification = require("../models/notificationModel");
+const { Notification } = require("../models");
 const catchError = require("../util/catchError");
 const { notifyOfferToCircle } = require("./eventlisteners");
 

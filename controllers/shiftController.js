@@ -1,11 +1,9 @@
 const xlsx = require("xlsx");
-const Shift = require("../models/shiftModel");
 const catchError = require("../util/catchError");
 const logger = require("../util/logger");
 const AppError = require("../util/appError");
 const { formatShitdata } = require("../util/formatData");
-const ShiftType = require("../models/shiftTypeModel");
-const Staff = require("../models/staffModel");
+const { Staff, Shift, ShiftType, Offer, Swap } = require("../models");
 
 // so I return the company type details here
 exports.getAllShifts = catchError(async (req, res, next) => {
@@ -103,7 +101,7 @@ exports.addBulkShift = catchError(async (req, res, next) => {
   for (let key in shiftdata[0]) {
     let date = `${shiftdata[0][key]}`;
     let day = date.split(".")[0];
-    let month = date.split(".")[1];
+    let month = date.split(".")[1] - 1;
     dates[key] = new Date(currentYear, month, day);
   }
   for (let key in shiftdata[1]) {
@@ -143,7 +141,10 @@ exports.addBulkShift = catchError(async (req, res, next) => {
     }
   }
 
-  // await Shift.destroy({ where: { companyId: company.id } });
+  // delete all offers and swaps with company
+  await Offer.destroy({ where: { companyId: company.id } });
+  await Swap.destroy({ where: { companyId: company.id } });
+  await Shift.destroy({ where: { companyId: company.id } });
   await Shift.bulkCreate(shifts);
 
   return res.status(200).json({

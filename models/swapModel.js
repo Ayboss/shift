@@ -1,9 +1,6 @@
 const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../database/database");
-const Staff = require("./staffModel");
-const Company = require("./companyModel");
 const status = require("../util/statusType");
-const Shift = require("./shiftModel");
 
 class Swap extends Model {}
 
@@ -19,7 +16,7 @@ Swap.init(
       allowNull: false,
       unique: false,
       references: {
-        model: Shift,
+        model: "shifts",
         key: "id",
       },
     },
@@ -27,7 +24,7 @@ Swap.init(
       type: DataTypes.STRING,
       allowNull: false,
       references: {
-        model: Company,
+        model: "companies",
         key: "id",
       },
     },
@@ -35,7 +32,7 @@ Swap.init(
       type: DataTypes.STRING,
       allowNull: false,
       references: {
-        model: Staff,
+        model: "staffs",
         key: "id",
       },
     },
@@ -59,7 +56,7 @@ Swap.init(
       type: DataTypes.STRING,
       allowNull: true,
       references: {
-        model: Staff,
+        model: "staffs",
         key: "id",
       },
     },
@@ -68,7 +65,7 @@ Swap.init(
       allowNull: true,
       unique: false,
       references: {
-        model: Shift,
+        model: "shifts",
         key: "id",
       },
     },
@@ -79,11 +76,5 @@ Swap.init(
     timestamps: true,
   }
 );
-
-Swap.belongsTo(Staff, { as: "staff", foreignKey: "staffId" });
-Swap.belongsTo(Staff, { as: "claimer", foreignKey: "claimerId" });
-Swap.belongsTo(Shift, { as: "staffShift", foreignKey: "shiftId" });
-Swap.belongsTo(Shift, { as: "claimerShift", foreignKey: "claimerShiftId" });
-Staff.hasMany(Swap, { as: "swaps", foreignKey: "staffId" });
 
 module.exports = Swap;

@@ -1,7 +1,6 @@
 const EventListener = require("node:events");
-const Notification = require("../models/notificationModel");
-const Circle = require("../models/circleModel");
 const status = require("../util/statusType");
+const { Notification, Circle } = require("../models");
 
 const notificationEvent = "notificationEvent";
 

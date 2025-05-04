@@ -1,7 +1,5 @@
 const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../database/database");
-const Staff = require("./staffModel");
-const Company = require("./companyModel");
 
 class Notification extends Model {}
 
@@ -16,7 +14,7 @@ Notification.init(
       type: DataTypes.STRING,
       allowNull: true,
       references: {
-        model: Staff,
+        model: "staffs",
         key: "id",
       },
     },
@@ -24,7 +22,7 @@ Notification.init(
       type: DataTypes.STRING,
       allowNull: false,
       references: {
-        model: Company,
+        model: "companies",
         key: "id",
       },
     },
@@ -64,10 +62,5 @@ Notification.init(
     timestamps: true,
   }
 );
-
-Notification.belongsTo(Staff, { foreignKey: "staffId", as: "staff" });
-Notification.belongsTo(Company, { foreignKey: "companyId", as: "company" });
-Staff.hasMany(Notification, { foreignKey: "staffId", as: "notifications" });
-Company.hasMany(Notification, { foreignKey: "companyId", as: "notifications" });
 
 module.exports = Notification;

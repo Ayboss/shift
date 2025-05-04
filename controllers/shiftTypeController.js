@@ -1,4 +1,4 @@
-const ShiftType = require("../models/shiftTypeModel");
+const { ShiftType } = require("../models");
 const AppError = require("../util/appError");
 const catchError = require("../util/catchError");
 

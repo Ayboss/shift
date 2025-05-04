@@ -1,7 +1,5 @@
 const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../database/database");
-const Staff = require("./staffModel");
-const Company = require("./companyModel");
 
 class Shift extends Model {}
 
@@ -16,7 +14,7 @@ Shift.init(
       type: DataTypes.STRING,
       allowNull: false,
       references: {
-        model: Company,
+        model: "companies",
         key: "id",
       },
     },
@@ -24,12 +22,12 @@ Shift.init(
       type: DataTypes.STRING,
       allowNull: false,
       references: {
-        model: Staff,
+        model: "staffs",
         key: "id",
       },
     },
     date: {
-      type: DataTypes.DATE,
+      type: DataTypes.DATEONLY,
       allowNull: false,
     },
     details: {
@@ -47,8 +45,5 @@ Shift.init(
     timestamps: true,
   }
 );
-
-Shift.belongsTo(Staff, { foreignKey: "staffId", as: "staff" });
-Staff.hasMany(Shift, { foreignKey: "staffId", as: "shifts" });
 
 module.exports = Shift;

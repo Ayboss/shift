@@ -32,10 +32,4 @@ Circle.init(
   { sequelize, tableName: "circles", timestamps: true }
 );
 
-// Define relationships
-Circle.belongsTo(Staff, { foreignKey: "staffId", as: "staff" });
-Circle.belongsTo(Staff, { foreignKey: "memberId", as: "member" });
-Staff.hasMany(Circle, { foreignKey: "staffId", as: "circles" });
-Staff.hasMany(Circle, { foreignKey: "memberId", as: "memberCircles" });
-
 module.exports = Circle;

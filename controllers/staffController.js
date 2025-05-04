@@ -1,10 +1,4 @@
 const sequelize = require("../database/database");
-const Company = require("../models/companyModel");
-const ShiftType = require("../models/shiftTypeModel");
-const Offer = require("../models/offerModel");
-const Shift = require("../models/shiftModel");
-const Staff = require("../models/staffModel");
-const Swap = require("../models/swapModel");
 const AppError = require("../util/appError");
 const catchError = require("../util/catchError");
 const { storeImageInCLoud } = require("../util/cloudinary");
@@ -14,6 +8,7 @@ const { formatStats } = require("../util/formatStats");
 const logger = require("../util/logger");
 const { hashPassword, comparePassword } = require("../util/passwordFunc");
 const { Op, where } = require("sequelize");
+const { Swap, Staff, Shift, Offer, ShiftType, Company } = require("../models");
 
 async function calculateTheStatistic(staffId) {
   try {
@@ -55,13 +50,6 @@ async function calculateTheStatistic(staffId) {
       group: ["status"],
       raw: true,
     });
-    console.log(
-      offerStats,
-      swapStats,
-      claimedOfferStats,
-      claimedSwapStats,
-      "here too"
-    );
     return {
       offerStats: formatStats(offerStats),
       swapStats: formatStats(swapStats),

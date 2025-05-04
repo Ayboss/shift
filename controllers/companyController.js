@@ -1,18 +1,20 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const Company = require("../models/companyModel");
 const AppError = require("../util/appError");
 const catchError = require("../util/catchError");
-const Staff = require("../models/staffModel");
 const createJWTToken = require("../util/createJWTToken");
 const { hashPassword, comparePassword } = require("../util/passwordFunc");
-const Notification = require("../models/notificationModel");
-const Swap = require("../models/swapModel");
-const Offer = require("../models/offerModel");
 const sequelize = require("../database/database");
 const { formatStats } = require("../util/formatStats");
 const { fn, col, literal } = require("sequelize");
-const Shift = require("../models/shiftModel");
+const {
+  Shift,
+  Offer,
+  Swap,
+  Notification,
+  Staff,
+  Company,
+} = require("../models");
 
 const statDetailsClause = {
   attributes: {

@@ -1,5 +1,4 @@
-const Circle = require("../models/circleModel");
-const Staff = require("../models/staffModel");
+const { Staff, Circle } = require("../models");
 const AppError = require("../util/appError");
 const catchError = require("../util/catchError");
 

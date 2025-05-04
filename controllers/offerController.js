@@ -1,15 +1,12 @@
-const { where } = require("sequelize");
-const Offer = require("../models/offerModel");
 const catchError = require("../util/catchError");
 const AppError = require("../util/appError");
 const status = require("../util/statusType");
-const Shift = require("../models/shiftModel");
-const Staff = require("../models/staffModel");
 const {
   notifyOfferIsClaimed,
   notifyOfferUpdatedByCompany,
   notifyOfferToCircle,
 } = require("./eventlisteners");
+const { Staff, Shift, Offer } = require("../models");
 
 exports.createOffer = catchError(async (req, res, next) => {
   const user = req.user;

@@ -1,7 +1,4 @@
-const { Op, where } = require("sequelize");
-const Shift = require("../models/shiftModel");
-const Staff = require("../models/staffModel");
-const Swap = require("../models/swapModel");
+const { Op } = require("sequelize");
 const AppError = require("../util/appError");
 const catchError = require("../util/catchError");
 const status = require("../util/statusType");
@@ -10,6 +7,7 @@ const {
   notifySwapAccepted,
   notifySwapDeclined,
 } = require("./eventlisteners");
+const { Swap, Staff, Shift } = require("../models");
 
 const getSwap = catchError(async (whereclause, res, next) => {
   const attribute = [

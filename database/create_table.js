@@ -121,7 +121,7 @@ exports.init = function () {
   // create_admin_table();
   // create_company_table();
   // create_staff_table();
-  // create_shift_table();
+  create_shift_table();
   // create_offer_table();
   // create_swap_table();
   // create_circle_table();
