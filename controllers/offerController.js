@@ -7,6 +7,7 @@ const {
   notifyOfferToCircle,
 } = require("./eventlisteners");
 const { Staff, Shift, Offer } = require("../models");
+const { Op } = require("sequelize");
 
 const attribute = [
   "id",
@@ -49,15 +50,8 @@ exports.createOffer = catchError(async (req, res, next) => {
   });
 });
 
-exports.getAllOffer = catchError(async (req, res, next) => {
-  const { status } = req.query;
-  const whereClause = {
-    companyId: req.user.companyId,
-  };
-  if (status) {
-    whereClause.status = status;
-  }
-
+const getAllOffer = catchError(async (whereClause, res) => {
+  console.log(whereClause, "hi");
   const offers = await Offer.findAll({
     where: whereClause,
     include: [
@@ -84,11 +78,75 @@ exports.getAllOffer = catchError(async (req, res, next) => {
     data: offers,
   });
 });
+exports.getAllOfferCompany = catchError(async (req, res, next) => {
+  const { status: statusquery } = req.query;
+  let whereClause = {
+    companyId: req.user.id,
+    status: status.OPEN,
+  };
+  if (statusquery) {
+    whereClause.status = statusquery;
+  }
+
+  getAllOffer(whereClause, res);
+});
+
+exports.getAllOfferStaff = catchError(async (req, res, next) => {
+  const { status: statusquery } = req.query;
+  let whereClause = {
+    companyId: req.user.companyId,
+    status: status.OPEN,
+  };
+  if (statusquery && statusquery != status.OPEN) {
+    whereClause = {
+      companyId: req.user.companyId,
+      [Op.or]: [{ staffId: req.user.id }, { claimerId: req.user.id }],
+    };
+  }
+
+  if (statusquery) {
+    whereClause.status = statusquery;
+  }
+  getAllOffer(whereClause, res);
+});
 
 exports.getOneOffer = catchError(async (req, res, next) => {
   const { offerId } = req.params;
   const offer = await Offer.findOne({
     where: { companyId: req.user.companyId, id: offerId },
+    include: [
+      {
+        model: Staff,
+        as: "staff",
+        attributes: attribute,
+      },
+      {
+        model: Staff,
+        as: "claimer",
+        attributes: attribute,
+      },
+      {
+        model: Shift,
+        as: "shift",
+        attributes: ["date", "type"],
+      },
+    ],
+  });
+  if (!offer) {
+    return next(
+      new AppError("This offer for this company does not exist", 400)
+    );
+  }
+  return res.status(200).json({
+    status: "success",
+    data: offer,
+  });
+});
+
+exports.getOneOfferCompany = catchError(async (req, res, next) => {
+  const { offerId } = req.params;
+  const offer = await Offer.findOne({
+    where: { companyId: req.user.id, id: offerId },
     include: [
       {
         model: Staff,

@@ -112,7 +112,7 @@ exports.protect = catchError(async (req, res, next) => {
     currentUser = await Staff.findOne({ where: { id: decode.id } });
   }
   if (!currentUser) {
-    return next(new AppError("company with token does not exit", 401));
+    return next(new AppError("user with token does not exit", 401));
   }
 
   if (type == "company") {

@@ -9,6 +9,7 @@ const logger = require("../util/logger");
 const { hashPassword, comparePassword } = require("../util/passwordFunc");
 const { Op, where } = require("sequelize");
 const { Swap, Staff, Shift, Offer, ShiftType, Company } = require("../models");
+const status = require("../util/statusType");
 
 async function calculateTheStatistic(staffId) {
   try {
@@ -424,10 +425,18 @@ exports.verifyStaffCompany = catchError(async (req, res, next) => {
 
 exports.getOffersAndSwaps = catchError(async (req, res, next) => {
   const user = req.user;
-  const { status } = req.query;
-  const whereClause = {
+  const { status: statusquery } = req.query;
+
+  let whereClause = {
     companyId: user.companyId,
+    status: status.OPEN,
   };
+  if (statusquery && statusquery != status.OPEN) {
+    whereClause = {
+      companyId: req.user.companyId,
+      [Op.or]: [{ staffId: req.user.id }, { claimerId: req.user.id }],
+    };
+  }
   const attribute = [
     "id",
     "fullName",
@@ -438,11 +447,12 @@ exports.getOffersAndSwaps = catchError(async (req, res, next) => {
   ];
   const whereClauseswap = {
     companyId: user.companyId,
+    status: status.OPEN,
     [Op.or]: [{ staffId: user.id }, { claimerId: user.id }],
   };
-  if (status) {
-    whereClause.status = status;
-    whereClauseswap.status = status;
+  if (statusquery) {
+    whereClause.status = statusquery;
+    whereClauseswap.status = statusquery;
   }
   const offers = await Offer.findAll({
     where: whereClause,

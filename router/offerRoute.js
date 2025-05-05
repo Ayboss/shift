@@ -3,9 +3,23 @@ const router = express.Router();
 const offerController = require("../controllers/offerController");
 const authController = require("../controllers/authController");
 
-router.get("/", authController.protect, offerController.getAllOffer);
-router.get("/:offerId", authController.protect, offerController.getOneOffer);
 router.post("/", authController.protectStaff, offerController.createOffer);
+router.get("/", authController.protectStaff, offerController.getAllOfferStaff);
+router.get(
+  "/company",
+  authController.protectCompany,
+  offerController.getAllOfferCompany
+);
+router.get(
+  "/:offerId",
+  authController.protectStaff,
+  offerController.getOneOffer
+);
+router.get(
+  "/:offerId/company",
+  authController.protectCompany,
+  offerController.getOneOfferCompany
+);
 router.delete(
   "/:offerId/",
   authController.protectStaff,
