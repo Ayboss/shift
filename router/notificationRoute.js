@@ -3,7 +3,15 @@ const router = express.Router();
 const notificationController = require("../controllers/notificationController");
 const authController = require("../controllers/authController");
 
-router.use(authController.protectStaff);
-router.get("/", notificationController.getNotifications);
+router.get(
+  "/",
+  authController.protectStaff,
+  notificationController.getNotifications
+);
+router.get(
+  "/company",
+  authController.protectCompany,
+  notificationController.getCompanyNotifications
+);
 router.post("/", notificationController.createNotification);
 module.exports = router;

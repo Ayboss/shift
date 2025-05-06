@@ -13,6 +13,17 @@ exports.getNotifications = catchError(async (req, res, next) => {
   });
 });
 
+exports.getCompanyNotifications = catchError(async (req, res, next) => {
+  const user = req.user;
+  const notifications = await Notification.findAll({
+    where: { companyId: user.id },
+  });
+  res.status(200).json({
+    status: "success",
+    data: notifications,
+  });
+});
+
 exports.createNotification = catchError(async (req, res, next) => {
   const user = req.user;
   notifyOfferToCircle(user, "b8e06307-126f-49a8-bfb8-785b1b9ed663");

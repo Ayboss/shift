@@ -6,6 +6,7 @@ const {
   notifySwapCreated,
   notifySwapAccepted,
   notifySwapDeclined,
+  notifySwapAcceptedByCompany,
 } = require("./eventlisteners");
 const { Swap, Staff, Shift } = require("../models");
 
@@ -245,16 +246,16 @@ exports.updateSwapStatus = catchError(async (req, res, next) => {
 
   if (statusval == status.ACCEPTED) {
     // swap.staffId. with claimershiftid, swap.claimerId with shiftId
-    await Promise.all(
+    await Promise.all([
       Shift.update(
         { staffId: swap.claimerId },
         { where: { id: swap.shiftId } }
       ),
-      await Shift.update(
+      Shift.update(
         { staffId: swap.staffId },
         { where: { id: swap.claimerShiftId } }
-      )
-    );
+      ),
+    ]);
   }
 
   await swap.update({ status: statusval });
