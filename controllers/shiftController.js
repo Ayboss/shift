@@ -157,6 +157,8 @@ exports.addBulkShift = catchError(async (req, res, next) => {
   await Shift.destroy({ where: { companyId: company.id } });
   await Shift.bulkCreate(shifts);
 
+  notifyShiftDocumentUploaded(req.user.companyId);
+  // notification
   return res.status(200).json({
     status: "success",
     data: null,

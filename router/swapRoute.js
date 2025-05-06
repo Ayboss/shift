@@ -39,7 +39,7 @@ router.delete(
   swapController.deleteSwap
 );
 
-router.post(
+router.patch(
   "/:swapId",
   authController.protectCompany,
   swapController.updateSwapStatus

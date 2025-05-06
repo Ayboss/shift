@@ -1,5 +1,6 @@
 const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../database/database");
+const notificationType = require("../util/notificationType");
 
 class Notification extends Model {}
 
@@ -42,7 +43,13 @@ Notification.init(
     },
     notifType: {
       allowNull: false,
-      type: DataTypes.ENUM("SWAP", "OFFER", "REMINDER", "GENERAL", "SPECIAL"),
+      type: DataTypes.ENUM(
+        notificationType.SWAP,
+        notificationType.OFFER,
+        notificationType.REMINDER,
+        notificationType.GENERAL,
+        notificationType.SPECIAL
+      ),
       defaultValue: "GENERAL",
       validate: {
         notEmpty: true,

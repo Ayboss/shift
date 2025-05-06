@@ -1,6 +1,7 @@
 const EventListener = require("node:events");
 const status = require("../util/statusType");
-const { Notification, Circle } = require("../models");
+const { Notification, Circle, Company, Staff } = require("../models");
+const notificationType = require("../util/notificationType");
 
 const notificationEvent = "notificationEvent";
 
@@ -15,16 +16,21 @@ eventListener.on(notificationEvent, async (data) => {
   }
 });
 
-exports.notifyShiftDocumentUploaded = (data) => {
-  // do some computation and add to the data
-  eventListener.emit(notificationEvent, {
-    title: "New Shift has been uploaded",
-    description:
-      "This is a new shift, please check your shift and if you have any issue , let your admin know please",
-    notifType: "GENERAL",
-    companyId: data.id,
-  });
+exports.notifyShiftDocumentUploaded = async (companyId) => {
+  const staffs = await Staff.findAll({ where: { companyId: companyId } });
+  for (let staff of staffs) {
+    eventListener.emit(notificationEvent, {
+      notifType: notificationType.GENERAL,
+      title: "New Shift Schedule Uploaded",
+      description:
+        "Your manager updated the schedule, check your calendar for changes",
+      staffId: staff.id,
+      companyId: staff.companyId,
+      redirectId: null,
+    });
+  }
 };
+
 exports.notifySpecialCondition = (data) => {
   // do some computation and add to the data
   eventListener.emit(notificationEvent, {
@@ -75,16 +81,8 @@ exports.notifyOfferIsClaimed = async (staff, offer) => {
   eventListener.emit(notificationEvent, {
     notifType: "OFFER",
     title: "Offer claimed",
-    description: `${staff.fullName} has claimed your offer for the date`,
+    description: `${staff.fullName} has claimed your offer for the ${offer.shift.date}`,
     staffId: offer.staffId,
-    companyId: staff.companyId,
-    redirectId: offer.id,
-  });
-  eventListener.emit(notificationEvent, {
-    notifType: "OFFER",
-    title: "Offer claimed",
-    description: `You just claimed an Offer`,
-    staffId: staff.id,
     companyId: staff.companyId,
     redirectId: offer.id,
   });
@@ -98,7 +96,7 @@ exports.notifyOfferUpdatedByCompany = (offer, statusval) => {
       : "Offer Declined by company";
   const description =
     statusval == status.ACCEPTED
-      ? "Admin has succesfully approved your offer for date"
+      ? `Admin has succesfully approved your offer for ${offer.shift.date}`
       : "Your request to make an offer has been declined";
   eventListener.emit(notificationEvent, {
     notifType: "OFFER",
@@ -120,18 +118,62 @@ exports.notifyOfferUpdatedByCompany = (offer, statusval) => {
   });
 };
 
-exports.notifySwapCreated = (data) => {
+exports.notifySwapCreated = (swap, staffname) => {
   // do some computation and add to the data
-  console.log("notify that swap has been created");
+  eventListener.emit(notificationEvent, {
+    notifType: notificationType.SWAP,
+    title: "Swap Created",
+    description: `${staffname} wants to swap your shift with you`,
+    staffId: swap.claimerId,
+    companyId: swap.companyId,
+    redirectId: swap.id,
+  });
 };
 
-exports.notifySwapAccepted = (data) => {
+exports.notifySwapAccepted = (swap) => {
   // do some computation and add to the data
+  eventListener.emit(notificationEvent, {
+    notifType: notificationType.SWAP,
+    title: "Swap Accepted",
+    description: `${swap.claimer.fullName} offered to swap shift with you for ${swap.claimerShift.date}`,
+    staffId: swap.staffId,
+    companyId: swap.companyId,
+    redirectId: swap.id,
+  });
   console.log("notify  swap has been accepted");
 };
 
-exports.notifySwapDeclined = (data) => {
+exports.notifySwapAcceptedByCompany = (swap, statusval) => {
+  let message = statusval == status.ACCEPTED ? "approved" : "declined";
+  eventListener.emit(notificationEvent, {
+    notifType: notificationType.SWAP,
+    title: `Swap ${message}`,
+    description: `Your company has ${message} your swap shift with ${swap.claimer.fullName} for ${swap.claimerShift.date}`,
+    staffId: swap.staffId,
+    companyId: swap.companyId,
+    redirectId: swap.id,
+  });
+  eventListener.emit(notificationEvent, {
+    notifType: notificationType.SWAP,
+    title: "Swap Accepted",
+    description: `Your company has ${message} your swap shift with ${swap.staff.fullName} for ${swap.claimerShift.date}`,
+    staffId: swap.claimerId,
+    companyId: swap.companyId,
+    redirectId: swap.id,
+  });
+  console.log("notify  swap has been accepted bu company");
+};
+
+exports.notifySwapDeclined = (swap) => {
   // do some computation and add to the data
+  eventListener.emit(notificationEvent, {
+    notifType: notificationType.SWAP,
+    title: "Swap Declined",
+    description: `${swap.claimer.fullName} declined to swap shift with you for ${swap.claimerShift.date}`,
+    staffId: swap.staffId,
+    companyId: swap.companyId,
+    redirectId: swap.id,
+  });
   console.log("notify  swap has been declined");
 };
 

@@ -18,6 +18,24 @@ const attribute = [
   "isImageMemoji",
 ];
 
+const modelInclude = [
+  {
+    model: Staff,
+    as: "staff",
+    attributes: attribute,
+  },
+  {
+    model: Staff,
+    as: "claimer",
+    attributes: attribute,
+  },
+  {
+    model: Shift,
+    as: "shift",
+    attributes: ["date", "type"],
+  },
+];
+
 exports.createOffer = catchError(async (req, res, next) => {
   const user = req.user;
   const { shiftId, reason } = req.body;
@@ -54,23 +72,7 @@ const getAllOffer = catchError(async (whereClause, res) => {
   console.log(whereClause, "hi");
   const offers = await Offer.findAll({
     where: whereClause,
-    include: [
-      {
-        model: Staff,
-        as: "staff",
-        attributes: attribute,
-      },
-      {
-        model: Staff,
-        as: "claimer",
-        attributes: attribute,
-      },
-      {
-        model: Shift,
-        as: "shift",
-        attributes: ["date", "type"],
-      },
-    ],
+    include: modelInclude,
   });
 
   return res.status(200).json({
@@ -114,23 +116,7 @@ exports.getOneOffer = catchError(async (req, res, next) => {
   const { offerId } = req.params;
   const offer = await Offer.findOne({
     where: { companyId: req.user.companyId, id: offerId },
-    include: [
-      {
-        model: Staff,
-        as: "staff",
-        attributes: attribute,
-      },
-      {
-        model: Staff,
-        as: "claimer",
-        attributes: attribute,
-      },
-      {
-        model: Shift,
-        as: "shift",
-        attributes: ["date", "type"],
-      },
-    ],
+    include: modelInclude,
   });
   if (!offer) {
     return next(
@@ -147,23 +133,7 @@ exports.getOneOfferCompany = catchError(async (req, res, next) => {
   const { offerId } = req.params;
   const offer = await Offer.findOne({
     where: { companyId: req.user.id, id: offerId },
-    include: [
-      {
-        model: Staff,
-        as: "staff",
-        attributes: attribute,
-      },
-      {
-        model: Staff,
-        as: "claimer",
-        attributes: attribute,
-      },
-      {
-        model: Shift,
-        as: "shift",
-        attributes: ["date", "type"],
-      },
-    ],
+    include: modelInclude,
   });
   if (!offer) {
     return next(
@@ -183,6 +153,7 @@ exports.claimOffer = catchError(async (req, res, next) => {
 
   const offer = await Offer.findOne({
     where: { companyId: user.companyId, id: offerId, status: "OPEN" },
+    include: modelInclude,
   });
   if (!offer || offer.staffId == user.id) {
     return next(new AppError("User cannot claim this offer", 400));
@@ -211,6 +182,7 @@ exports.updateOfferStatus = catchError(async (req, res, next) => {
   }
   const offer = await Offer.findOne({
     where: { companyId: company.id, status: status.IN_REVIEW, id: offerId },
+    include: modelInclude,
   });
   if (!offer) {
     return next(new AppError("This offer is no longer in review", 400));

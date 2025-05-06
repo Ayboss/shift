@@ -9,39 +9,41 @@ const {
 } = require("./eventlisteners");
 const { Swap, Staff, Shift } = require("../models");
 
+const attribute = [
+  "id",
+  "fullName",
+  "phoneNumber",
+  "email",
+  "image",
+  "isImageMemoji",
+];
+
+const modelInclude = [
+  {
+    model: Staff,
+    as: "staff",
+    attributes: attribute,
+  },
+  {
+    model: Staff,
+    as: "claimer",
+    attributes: attribute,
+  },
+  {
+    model: Shift,
+    as: "staffShift",
+    attributes: ["date", "type"],
+  },
+  {
+    model: Shift,
+    as: "claimerShift",
+    attributes: ["date", "type"],
+  },
+];
 const getSwap = catchError(async (whereclause, res, next) => {
-  const attribute = [
-    "id",
-    "fullName",
-    "phoneNumber",
-    "email",
-    "image",
-    "isImageMemoji",
-  ];
   const swap = await Swap.findOne({
     where: whereclause,
-    include: [
-      {
-        model: Staff,
-        as: "staff",
-        attributes: attribute,
-      },
-      {
-        model: Staff,
-        as: "claimer",
-        attributes: attribute,
-      },
-      {
-        model: Shift,
-        as: "staffShift",
-        attributes: ["date", "type"],
-      },
-      {
-        model: Shift,
-        as: "claimerShift",
-        attributes: ["date", "type"],
-      },
-    ],
+    include: modelInclude,
   });
 
   if (!swap) {
@@ -54,39 +56,10 @@ const getSwap = catchError(async (whereclause, res, next) => {
 });
 
 const getAllSwap = catchError(async (whereClause, res) => {
-  const attribute = [
-    "id",
-    "fullName",
-    "phoneNumber",
-    "email",
-    "image",
-    "isImageMemoji",
-  ];
   // filter by status
   const swaps = await Swap.findAll({
     where: whereClause,
-    include: [
-      {
-        model: Staff,
-        as: "staff",
-        attributes: attribute,
-      },
-      {
-        model: Staff,
-        as: "claimer",
-        attributes: attribute,
-      },
-      {
-        model: Shift,
-        as: "staffShift",
-        attributes: ["date", "type"],
-      },
-      {
-        model: Shift,
-        as: "claimerShift",
-        attributes: ["date", "type"],
-      },
-    ],
+    include: modelInclude,
   });
 
   return res.status(200).json({
@@ -130,7 +103,7 @@ exports.createSwap = catchError(async (req, res, next) => {
     reason: reason,
     claimerShiftId: claimerShiftId,
   });
-  notifySwapCreated();
+  notifySwapCreated(swap, user.fullName);
   return res.status(200).json({
     status: "success",
     data: swap,
@@ -181,20 +154,24 @@ exports.getOneSwap = catchError(async (req, res, next) => {
 });
 
 exports.acceptSwap = catchError(async (req, res, next) => {
-  // first check if the swap exist, and it's in the company , and it's open
-  // accept the swap
   const user = req.user;
   const { swapId } = req.params;
 
   const swap = await Swap.findOne({
-    where: { companyId: user.companyId, id: swapId, status: status.OPEN },
+    where: {
+      companyId: user.companyId,
+      id: swapId,
+      status: status.OPEN,
+      claimerId: user.id,
+    },
+    include: modelInclude,
   });
 
   if (!swap) {
     return next(new AppError("This swap does not exist", 400));
   }
   await swap.update({ status: status.IN_REVIEW });
-  notifySwapAccepted();
+  notifySwapAccepted(swap);
   return res.status(200).json({
     status: "success",
     data: swap,
@@ -207,13 +184,14 @@ exports.declineSwap = catchError(async (req, res, next) => {
 
   const swap = await Swap.findOne({
     where: { companyId: user.companyId, id: swapId, status: status.OPEN },
+    include: modelInclude,
   });
 
   if (!swap) {
     return next(new AppError("This swap does not exist", 400));
   }
   await swap.update({ status: status.DECLINED });
-  notifySwapDeclined();
+  notifySwapDeclined(swap);
   return res.status(200).json({
     status: "success",
     data: swap,
@@ -259,6 +237,7 @@ exports.updateSwapStatus = catchError(async (req, res, next) => {
 
   const swap = await Swap.findOne({
     where: { companyId: company.id, status: status.IN_REVIEW, id: swapId },
+    include: modelInclude,
   });
   if (!swap) {
     return next(new AppError("This swap is no longer in review", 400));
@@ -279,6 +258,7 @@ exports.updateSwapStatus = catchError(async (req, res, next) => {
   }
 
   await swap.update({ status: statusval });
+  notifySwapAcceptedByCompany(swap, statusval);
   return res.status(200).json({
     status: "success",
     data: swap,
