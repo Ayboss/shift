@@ -153,7 +153,8 @@ exports.login = catchError(async (req, res, next) => {
 
 exports.getDashboardDetails = catchError(async (req, res, next) => {
   const company = req.user;
-  const [staffCount, swapCountByStatus, offerCountByStatus, notifications] =
+
+  const [staffCount, swapCountByStatus, offerCountByStatus, workerstat] =
     await Promise.all([
       Staff.count({ where: { companyId: company.id } }),
       Swap.findAll({
@@ -174,8 +175,29 @@ exports.getDashboardDetails = catchError(async (req, res, next) => {
         group: ["status"],
         raw: true,
       }),
-      Notification.findAll({
-        where: { notifType: "GENERAL", companyId: company.id },
+      Staff.findOne({
+        where: {
+          companyId: company.id,
+        },
+        attributes: [
+          [
+            sequelize.literal(
+              `COUNT(CASE WHEN verified = true AND blocked = false THEN 1 END)`
+            ),
+            "verifiedCount",
+          ],
+          [
+            sequelize.literal(
+              `COUNT(CASE WHEN verified = false AND blocked = false THEN 1 END)`
+            ),
+            "nonVerifiedCount",
+          ],
+          [
+            sequelize.literal(`COUNT(CASE WHEN blocked = true THEN 1 END)`),
+            "blockedCount",
+          ],
+        ],
+        raw: true,
       }),
     ]);
 
@@ -187,7 +209,7 @@ exports.getDashboardDetails = catchError(async (req, res, next) => {
       totalStaffs: staffCount,
       swapsByStatus: formatswaps,
       offersByStatus: formatoffer,
-      notifications: notifications,
+      workersStatistic: workerstat,
     },
   });
 });
