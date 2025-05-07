@@ -1,13 +1,22 @@
 const express = require("express");
 const router = express.Router();
-const authController = require("../controllers/authController");
-const swapController = require("../controllers/swapController");
+const {
+  authController,
+  swapController,
+  utilsController,
+} = require("../controllers");
 
 router.post("/", authController.protectStaff, swapController.createSwap);
-router.get("/", authController.protectStaff, swapController.getAllSwapForUser);
+router.get(
+  "/",
+  authController.protectStaff,
+  utilsController.paginated,
+  swapController.getAllSwapForUser
+);
 router.get(
   "/company",
   authController.protectCompany,
+  utilsController.paginated,
   swapController.getAllSwapForCompany
 );
 

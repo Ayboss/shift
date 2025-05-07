@@ -56,16 +56,25 @@ const getSwap = catchError(async (whereclause, res, next) => {
   });
 });
 
-const getAllSwap = catchError(async (whereClause, res) => {
+const getAllSwap = catchError(async (whereClause, req, res) => {
   // filter by status
-  const swaps = await Swap.findAll({
+  const { limit, offset, page } = req.pagination;
+  const { count, rows: swaps } = await Swap.findAndCountAll({
     where: whereClause,
     include: modelInclude,
+    limit,
+    offset,
   });
 
   return res.status(200).json({
     status: "success",
     data: swaps,
+    meta: {
+      total: count,
+      page,
+      limit,
+      totalPages: Math.ceil(count / limit),
+    },
   });
 });
 
@@ -121,11 +130,12 @@ exports.getAllSwapForUser = catchError(async (req, res, next) => {
   if (status) {
     whereClause.status = status;
   }
-  getAllSwap(whereClause, res);
+  getAllSwap(whereClause, req, res);
 });
 
 exports.getAllSwapForCompany = catchError(async (req, res, next) => {
   const company = req.user;
+
   const whereClause = {
     companyId: company.id,
   };
@@ -133,7 +143,7 @@ exports.getAllSwapForCompany = catchError(async (req, res, next) => {
   if (status) {
     whereClause.status = status;
   }
-  getAllSwap(whereClause, res);
+  getAllSwap(whereClause, req, res);
 });
 
 exports.getOneSwapForUser = catchError(async (req, res, next) => {

@@ -4,23 +4,41 @@ const { notifyOfferToCircle } = require("./eventlisteners");
 
 exports.getNotifications = catchError(async (req, res, next) => {
   const user = req.user;
-  const notifications = await Notification.findAll({
+  const { limit, offset, page } = req.pagination;
+  const { count, rows: notifications } = await Notification.findAndCountAll({
     where: { staffId: user.id },
+    limit,
+    offset,
   });
   res.status(200).json({
     status: "success",
     data: notifications,
+    meta: {
+      total: count,
+      page,
+      limit,
+      totalPages: Math.ceil(count / limit),
+    },
   });
 });
 
 exports.getCompanyNotifications = catchError(async (req, res, next) => {
   const user = req.user;
-  const notifications = await Notification.findAll({
+  const { limit, offset, page } = req.pagination;
+  const { count, rows: notifications } = await Notification.findAndCountAll({
     where: { companyId: user.id },
+    limit,
+    offset,
   });
   res.status(200).json({
     status: "success",
     data: notifications,
+    meta: {
+      total: count,
+      page,
+      limit,
+      totalPages: Math.ceil(count / limit),
+    },
   });
 });
 

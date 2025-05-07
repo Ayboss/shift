@@ -19,10 +19,8 @@ const {
 const statDetailsClause = {
   attributes: {
     include: [
-      // ✅ Count shifts
       [fn("COUNT", col("shifts.id")), "shiftsCount"],
 
-      // ✅ Count offers grouped by status
       [
         fn(
           "SUM",
@@ -52,7 +50,6 @@ const statDetailsClause = {
         "offersDeclined",
       ],
 
-      // ✅ Count swaps grouped by status
       [
         fn("SUM", literal(`CASE WHEN swaps.status = 'OPEN' THEN 1 ELSE 0 END`)),
         "swapsOpen",
@@ -85,19 +82,23 @@ const statDetailsClause = {
       model: Shift,
       as: "shifts",
       attributes: [],
+      required: false, // Make this a LEFT JOIN
     },
     {
       model: Offer,
       as: "offers",
       attributes: [],
+      required: false, // Make this a LEFT JOIN
     },
     {
       model: Swap,
       as: "swaps",
       attributes: [],
+      required: false, // Make this a LEFT JOIN
     },
   ],
   group: ["Staff.id"],
+  subQuery: false, // This is the key change - prevent Sequelize from creating a subquery
 };
 
 exports.signup = catchError(async (req, res, next) => {
@@ -270,14 +271,28 @@ exports.addStaff = catchError(async (req, res, next) => {
 
 exports.getStaff = catchError(async (req, res, next) => {
   const company = req.user;
-  const staffs = await Staff.findAll({
-    where: { companyId: company.id },
-    ...statDetailsClause,
-  });
+  const { limit, offset, page } = req.pagination;
+  const [count, staffs] = await Promise.all([
+    Staff.count({
+      where: { companyId: company.id },
+    }),
+    Staff.findAll({
+      where: { companyId: company.id },
+      ...statDetailsClause,
+      limit,
+      offset,
+    }),
+  ]);
 
   return res.status(200).json({
     status: "success",
     data: staffs,
+    meta: {
+      total: count,
+      page,
+      limit,
+      totalPages: Math.ceil(count / limit),
+    },
   });
 });
 

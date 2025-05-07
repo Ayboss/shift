@@ -99,10 +99,20 @@ exports.getDashboardDetails = catchError(async (req, res, next) => {
 });
 
 exports.getAllCompanies = catchError(async (req, res, next) => {
-  const companies = await Company.findAll();
+  const { limit, offset, page } = req.pagination;
+  const { count, rows: companies } = await Company.findAndCountAll({
+    limit,
+    offset,
+  });
   return res.status(200).json({
     status: "success",
     data: companies,
+    meta: {
+      total: count,
+      page,
+      limit,
+      totalPages: Math.ceil(count / limit),
+    },
   });
 });
 

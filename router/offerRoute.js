@@ -1,13 +1,22 @@
 const express = require("express");
 const router = express.Router();
-const offerController = require("../controllers/offerController");
-const authController = require("../controllers/authController");
+const {
+  authController,
+  offerController,
+  utilsController,
+} = require("../controllers");
 
 router.post("/", authController.protectStaff, offerController.createOffer);
-router.get("/", authController.protectStaff, offerController.getAllOfferStaff);
+router.get(
+  "/",
+  authController.protectStaff,
+  utilsController.paginated,
+  offerController.getAllOfferStaff
+);
 router.get(
   "/company",
   authController.protectCompany,
+  utilsController.paginated,
   offerController.getAllOfferCompany
 );
 router.get(

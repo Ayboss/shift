@@ -1,6 +1,5 @@
 exports.adminRouter = require("./adminRoute");
 exports.circleRouter = require("./circleRoute");
-exports.circleRouter = require("./circleRoute");
 exports.companyRouter = require("./companyRoute");
 exports.notificationRouter = require("./notificationRoute");
 exports.swapRouter = require("./swapRoute");

@@ -1,0 +1,12 @@
+exports.adminController = require("./adminController");
+exports.authController = require("./authController");
+exports.circleController = require("./circleController");
+exports.companyController = require("./companyController");
+exports.errorController = require("./errorController");
+exports.notificationController = require("./notificationController");
+exports.offerController = require("./offerController");
+exports.shiftController = require("./shiftController");
+exports.shiftTypeController = require("./shiftTypeController");
+exports.staffController = require("./staffController");
+exports.swapController = require("./swapController");
+exports.utilsController = require("./utilsController");

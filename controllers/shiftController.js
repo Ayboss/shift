@@ -7,8 +7,11 @@ const { Staff, Shift, ShiftType, Offer, Swap } = require("../models");
 
 // so I return the company type details here
 exports.getAllShifts = catchError(async (req, res, next) => {
-  const shifts = await Shift.findAll({
+  const { limit, offset, page } = req.pagination;
+  const { count, rows: shifts } = await Shift.findAndCountAll({
     where: { companyId: req.user.companyId },
+    limit,
+    offset,
   });
   // find all shifttype belonging to company id, order in terms of start date
   const shiftTypes = await ShiftType.findAll({
@@ -19,6 +22,12 @@ exports.getAllShifts = catchError(async (req, res, next) => {
     status: "success",
     data: shifts,
     shiftTypes: shiftTypes,
+    meta: {
+      total: count,
+      page,
+      limit,
+      totalPages: Math.ceil(count / limit),
+    },
   });
 });
 

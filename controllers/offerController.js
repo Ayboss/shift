@@ -68,16 +68,24 @@ exports.createOffer = catchError(async (req, res, next) => {
   });
 });
 
-const getAllOffer = catchError(async (whereClause, res) => {
-  console.log(whereClause, "hi");
-  const offers = await Offer.findAll({
+const getAllOffer = catchError(async (whereClause, req, res) => {
+  const { limit, offset, page } = req.pagination;
+  const { count, rows: offers } = await Offer.findAndCountAll({
     where: whereClause,
     include: modelInclude,
+    limit,
+    offset,
   });
 
   return res.status(200).json({
     status: "success",
     data: offers,
+    meta: {
+      total: count,
+      page,
+      limit,
+      totalPages: Math.ceil(count / limit),
+    },
   });
 });
 exports.getAllOfferCompany = catchError(async (req, res, next) => {
@@ -90,7 +98,7 @@ exports.getAllOfferCompany = catchError(async (req, res, next) => {
     whereClause.status = statusquery;
   }
 
-  getAllOffer(whereClause, res);
+  getAllOffer(whereClause, req, res);
 });
 
 exports.getAllOfferStaff = catchError(async (req, res, next) => {
@@ -109,7 +117,7 @@ exports.getAllOfferStaff = catchError(async (req, res, next) => {
   if (statusquery) {
     whereClause.status = statusquery;
   }
-  getAllOffer(whereClause, res);
+  getAllOffer(whereClause, req, res);
 });
 
 exports.getOneOffer = catchError(async (req, res, next) => {

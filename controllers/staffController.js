@@ -355,13 +355,22 @@ exports.workingAtSameTime = catchError(async (req, res, next) => {
 
 exports.getStaffs = catchError(async (req, res, next) => {
   const staff = req.user;
-  const staffs = await Staff.findAll({
+  const { limit, offset, page } = req.pagination;
+  const { count, rows: staffs } = await Staff.findAndCountAll({
     where: { companyId: staff.companyId, id: { [Op.not]: staff.id } },
+    limit,
+    offset,
   });
 
   return res.status(200).json({
     status: "success",
     data: staffs,
+    meta: {
+      total: count,
+      page,
+      limit,
+      totalPages: Math.ceil(count / limit),
+    },
   });
 });
 

@@ -1,6 +1,6 @@
 const router = require("express").Router();
-const authController = require("../controllers/authController");
-const shiftTypeController = require("../controllers/shiftTypeController");
+
+const { authController, shiftTypeController } = require("../controllers");
 
 router.use(authController.protectCompany);
 
