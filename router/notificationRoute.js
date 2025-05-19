@@ -19,5 +19,11 @@ router.get(
   utilsController.paginated,
   notificationController.getCompanyNotifications
 );
+router.get(
+  "/admin",
+  authController.protectAdmin,
+  utilsController.paginated,
+  notificationController.getAdminNotifications
+);
 router.post("/", notificationController.createNotification);
 module.exports = router;

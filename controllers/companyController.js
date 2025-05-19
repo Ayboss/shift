@@ -6,7 +6,7 @@ const createJWTToken = require("../util/createJWTToken");
 const { hashPassword, comparePassword } = require("../util/passwordFunc");
 const sequelize = require("../database/database");
 const { formatStats } = require("../util/formatStats");
-const { fn, col, literal } = require("sequelize");
+const { fn, col, literal, Op } = require("sequelize");
 const {
   Shift,
   Offer,
@@ -15,6 +15,7 @@ const {
   Staff,
   Company,
 } = require("../models");
+const status = require("../util/statusType");
 
 const statDetailsClause = {
   attributes: {
@@ -101,60 +102,90 @@ const statDetailsClause = {
   subQuery: false, // This is the key change - prevent Sequelize from creating a subquery
 };
 
-exports.signup = catchError(async (req, res, next) => {
-  if (req.body.password && req.body.password.length < 8) {
-    return next(new AppError("Please input a stronger password", "401"));
-  }
-  // hashpassword
-  const hashed = await hashPassword(req.body.password);
+const getAnalytics = async (company) => {
+  const now = new Date();
+  const lastPeriod = new Date();
+  lastPeriod.setDate(now.getDate() - 30);
+  const [
+    totalUsers,
+    previousUsers,
+    totalPendingoffers,
+    pendingoffers,
+    totalAcceptedoffers,
+    acceptedoffers,
+    totalPendingswaps,
+    pendingoswaps,
+    totalAcceptedswaps,
+    acceptedswaps,
+  ] = await Promise.all([
+    Staff.count({ where: { companyId: company.id } }),
+    Staff.count({
+      where: {
+        companyId: company.id,
+        createdAt: { [Op.lt]: lastPeriod },
+      },
+    }),
+    Offer.count({
+      where: { companyId: company.id, status: status.IN_REVIEW },
+    }),
+    Offer.count({
+      where: {
+        companyId: company.id,
+        status: status.IN_REVIEW,
+        createdAt: { [Op.lt]: lastPeriod },
+      },
+    }),
+    Offer.count({
+      where: { companyId: company.id, status: status.ACCEPTED },
+    }),
+    Offer.count({
+      where: {
+        companyId: company.id,
+        status: status.ACCEPTED,
+        createdAt: { [Op.lt]: lastPeriod },
+      },
+    }),
+    Swap.count({
+      where: { companyId: company.id, status: status.IN_REVIEW },
+    }),
+    Swap.count({
+      where: {
+        companyId: company.id,
+        status: status.IN_REVIEW,
+        createdAt: { [Op.lt]: lastPeriod },
+      },
+    }),
+    Swap.count({
+      where: { companyId: company.id, status: status.ACCEPTED },
+    }),
+    Swap.count({
+      where: {
+        companyId: company.id,
+        status: status.ACCEPTED,
+        createdAt: { [Op.lt]: lastPeriod },
+      },
+    }),
+  ]);
 
-  const company = await Company.create({
-    companyName: req.body.companyName,
-    companyEmail: req.body.companyEmail,
-    country: req.body.country,
-    city: req.body.city,
-    district: req.body.district,
-    numberOfStaffs: req.body.numberOfStaffs,
-    password: hashed,
-  });
+  const growthstaff =
+    ((totalUsers - previousUsers) / (previousUsers || 1)) * 100;
+  const growthpending =
+    ((totalPendingoffers +
+      totalPendingswaps -
+      (pendingoffers + pendingoswaps)) /
+      (pendingoffers + pendingoswaps || 1)) *
+    100;
+  const growthaccepted =
+    ((totalAcceptedoffers +
+      totalAcceptedswaps -
+      (acceptedoffers + acceptedswaps)) /
+      (acceptedoffers + acceptedswaps || 1)) *
+    100;
 
-  const token = createJWTToken(company.id);
-  return res.status(200).json({
-    status: "success",
-    token: token,
-    data: company,
-  });
-});
-
-exports.login = catchError(async (req, res, next) => {
-  const { companyEmail, password } = req.body;
-  //check if email and password
-  if (!companyEmail || !password) {
-    return next(new AppError("please provide email and password", 400));
-  }
-  const company = await Company.scope("withPassword").findOne({
-    where: { companyEmail: companyEmail },
-  });
-  if (!company) {
-    return next(new AppError("company does not exist", 404));
-  }
-
-  if (!comparePassword(password, company.password)) {
-    return next(new AppError("incorrect email or password", 400));
-  }
-
-  const token = createJWTToken(company.id);
-  company.password = undefined;
-  return res.status(200).json({
-    status: "success",
-    token: token,
-    data: company,
-  });
-});
-
-exports.getDashboardDetails = catchError(async (req, res, next) => {
-  const company = req.user;
-
+  console.log("PRINT HERE", growthstaff, growthpending, growthaccepted);
+  return { growthstaff, growthpending, growthaccepted };
+};
+const getDashboardDetails = async (company) => {
   const [staffCount, swapCountByStatus, offerCountByStatus, workerstat] =
     await Promise.all([
       Staff.count({ where: { companyId: company.id } }),
@@ -202,15 +233,87 @@ exports.getDashboardDetails = catchError(async (req, res, next) => {
       }),
     ]);
 
+  const growth = await getAnalytics(company);
+
   const formatswaps = formatStats(swapCountByStatus);
   const formatoffer = formatStats(offerCountByStatus);
-  res.status(200).json({
+  return { formatswaps, formatoffer, workerstat, staffCount, growth };
+};
+
+exports.signup = catchError(async (req, res, next) => {
+  if (req.body.password && req.body.password.length < 8) {
+    return next(new AppError("Please input a stronger password", "401"));
+  }
+  // hashpassword
+  const hashed = await hashPassword(req.body.password);
+
+  const company = await Company.create({
+    companyName: req.body.companyName,
+    companyEmail: req.body.companyEmail,
+    country: req.body.country,
+    city: req.body.city,
+    district: req.body.district,
+    numberOfStaffs: req.body.numberOfStaffs,
+    password: hashed,
+  });
+
+  const token = createJWTToken(company.id);
+  return res.status(200).json({
     status: "success",
+    token: token,
+    data: company,
+  });
+});
+
+exports.login = catchError(async (req, res, next) => {
+  const { companyEmail, password } = req.body;
+  //check if email and password
+  if (!companyEmail || !password) {
+    return next(new AppError("please provide email and password", 400));
+  }
+  const company = await Company.scope("withPassword").findOne({
+    where: { companyEmail: companyEmail },
+  });
+  if (!company) {
+    return next(new AppError("company does not exist", 404));
+  }
+
+  if (!comparePassword(password, company.password)) {
+    return next(new AppError("incorrect email or password", 400));
+  }
+
+  const token = createJWTToken(company.id);
+  company.password = undefined;
+
+  const { formatswaps, formatoffer, workerstat, staffCount, growth } =
+    await getDashboardDetails(company);
+  return res.status(200).json({
+    status: "success",
+    token: token,
     data: {
+      ...company.dataValues,
       totalStaffs: staffCount,
       swapsByStatus: formatswaps,
       offersByStatus: formatoffer,
       workersStatistic: workerstat,
+      growthStatistic: growth,
+    },
+  });
+});
+
+exports.getDashboardDetails = catchError(async (req, res, next) => {
+  const company = req.user;
+  const { formatswaps, formatoffer, workerstat, staffCount, growth } =
+    await getDashboardDetails(company);
+  res.status(200).json({
+    status: "success",
+    data: {
+      ...company.dataValues,
+      totalStaffs: staffCount,
+      swapsByStatus: formatswaps,
+      offersByStatus: formatoffer,
+      workersStatistic: workerstat,
+      growthStatistic: growth,
     },
   });
 });
