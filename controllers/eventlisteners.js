@@ -18,6 +18,7 @@ eventListener.on(notificationEvent, async (data) => {
 
 exports.notifyShiftDocumentUploaded = async (companyId) => {
   const staffs = await Staff.findAll({ where: { companyId: companyId } });
+
   for (let staff of staffs) {
     eventListener.emit(notificationEvent, {
       notifType: notificationType.GENERAL,
