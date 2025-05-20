@@ -4,3 +4,7 @@
 - push notification
 - add the logging for server errors
 - test notification
+
+- on admin route return the count of staff they have
+- send new company, added in the past week
+- block and unblock a company

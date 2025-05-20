@@ -4,6 +4,7 @@ const logger = require("../util/logger");
 const AppError = require("../util/appError");
 const { formatShitdata } = require("../util/formatData");
 const { Staff, Shift, ShiftType, Offer, Swap } = require("../models");
+const { notifyShiftDocumentUploaded } = require("./eventlisteners");
 
 // so I return the company type details here
 exports.getAllShifts = catchError(async (req, res, next) => {
