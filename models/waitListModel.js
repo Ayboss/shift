@@ -18,6 +18,10 @@ WaitList.init(
         isEmail: true,
       },
     },
+    companyName: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
   },
   {
     sequelize,

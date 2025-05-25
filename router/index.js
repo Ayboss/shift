@@ -7,3 +7,4 @@ exports.offerRouter = require("./offerRoute");
 exports.shiftRouter = require("./shiftRoute");
 exports.staffRouter = require("./staffRoute");
 exports.shiftTypeRouter = require("./shiftTypeRoute");
+exports.waitlistRouter = require("./waitlistRoute");
