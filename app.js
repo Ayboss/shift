@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const errorController = require("./controllers/errorController");
 const routers = require("./router/index");
+const { WaitList } = require("./models");
 // adding all event listener
 require("./controllers/eventlisteners");
 
@@ -18,6 +19,30 @@ app.get("/test", (req, res, next) => {
       email: "bamiayo90@gmail.com",
     },
   });
+});
+app.get("/api/v1/waitlist", async (req, res) => {
+  try {
+    const waitlist = await WaitList.findOne({
+      where: { email: req.body.email },
+    });
+    if (waitlist) {
+      return res.status(200).json({
+        status: "success",
+        message: "Email already exist in the waitlist",
+      });
+    }
+    await WaitList.create({ email: req.body.email });
+    return res.status(200).json({
+      status: "success",
+      message: "Wailist joined succesfully",
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(400).json({
+      status: "error",
+      message: "unable to join waitlist",
+    });
+  }
 });
 app.use("/api/v1/admin", routers.adminRouter);
 app.use("/api/v1/company", routers.companyRouter);

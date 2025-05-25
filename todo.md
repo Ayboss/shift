@@ -8,3 +8,5 @@
 - on admin route return the count of staff they have
 - send new company, added in the past week
 - block and unblock a company
+- get staff in same shift should have not be duplicate
+- upcoming shift , just two datas

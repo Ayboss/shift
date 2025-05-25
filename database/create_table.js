@@ -1,3 +1,4 @@
+const { WaitList } = require("../models");
 const Admin = require("../models/adminModel");
 const Circle = require("../models/circleModel");
 const Company = require("../models/companyModel");
@@ -9,6 +10,17 @@ const Staff = require("../models/staffModel");
 const Swap = require("../models/swapModel");
 const logger = require("../util/logger");
 const sequelize = require("./database");
+
+const create_waitlist_table = () => {
+  WaitList.sync({ alter: true })
+    .then(() => {
+      logger.info("Waitlist created");
+    })
+    .catch((err) => {
+      console.log(err);
+      logger.error("Waitlist not created");
+    });
+};
 
 const create_admin_table = () => {
   Admin.sync({ alter: true })
@@ -121,11 +133,12 @@ exports.init = function () {
   // create_admin_table();
   // create_company_table();
   // create_staff_table();
-  create_shift_table();
+  // create_shift_table();
   // create_offer_table();
   // create_swap_table();
   // create_circle_table();
   // create_notification_table();
   // create_shifttype_table();
   // runRawSQLQueries();
+  create_waitlist_table();
 };

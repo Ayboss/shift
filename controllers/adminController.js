@@ -100,13 +100,6 @@ const getAnalytics = async () => {
       (acceptedoffers + acceptedswaps || 1)) *
     100;
 
-  console.log(
-    "PRINT HERE",
-    growthstaff,
-    growthpending,
-    growthaccepted,
-    growthcompany
-  );
   return { growthstaff, growthpending, growthaccepted, growthcompany };
 };
 

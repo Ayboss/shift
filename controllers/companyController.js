@@ -182,7 +182,7 @@ const getAnalytics = async (company) => {
       (acceptedoffers + acceptedswaps || 1)) *
     100;
 
-  console.log("PRINT HERE", growthstaff, growthpending, growthaccepted);
+  // console.log("PRINT HERE", growthstaff, growthpending, growthaccepted);
   return { growthstaff, growthpending, growthaccepted };
 };
 const getDashboardDetails = async (company) => {
