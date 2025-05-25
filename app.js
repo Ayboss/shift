@@ -20,7 +20,7 @@ app.get("/test", (req, res, next) => {
     },
   });
 });
-app.get("/api/v1/waitlist", async (req, res) => {
+app.post("/api/v1/waitlist", async (req, res) => {
   try {
     const waitlist = await WaitList.findOne({
       where: { email: req.body.email },
