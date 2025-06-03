@@ -2,6 +2,7 @@ const EventListener = require("node:events");
 const status = require("../util/statusType");
 const { Notification, Circle, Company, Staff } = require("../models");
 const notificationType = require("../util/notificationType");
+const { createExpoMessage, sendExpoMessage } = require("../util/expoPush");
 
 const notificationEvent = "notificationEvent";
 
@@ -12,24 +13,37 @@ eventListener.on(notificationEvent, async (data) => {
   try {
     await Notification.create(data);
   } catch (err) {
-    eventListener.emit(notificationEvent, data);
+    // eventListener.emit(notificationEvent, data);
   }
 });
 
 exports.notifyShiftDocumentUploaded = async (companyId) => {
   const staffs = await Staff.findAll({ where: { companyId: companyId } });
-
+  const title = "New Shift Schedule Uploaded";
+  const desc =
+    "Your manager updated the schedule, check your calendar for changes";
+  const messages = [];
   for (let staff of staffs) {
     eventListener.emit(notificationEvent, {
       notifType: notificationType.GENERAL,
-      title: "New Shift Schedule Uploaded",
-      description:
-        "Your manager updated the schedule, check your calendar for changes",
+      title: title,
+      description: desc,
       staffId: staff.id,
       companyId: staff.companyId,
       redirectId: null,
     });
+    const messaage = createExpoMessage(
+      staff.messageToken,
+      title,
+      desc,
+      null,
+      null
+    );
+    if (messaage) {
+      messages.push(messaage);
+    }
   }
+  sendExpoMessage(messages);
 };
 
 exports.notifySpecialCondition = (data) => {
@@ -63,30 +77,56 @@ exports.notifySwapAdminDeclined = (data) => {
 
 exports.notifyOfferToCircle = async (staff, offerid) => {
   const circles = await Circle.findAll({ where: { memberId: staff.id } });
+  const title = "New Offer has been created";
+  const body = `Hey a member of your circle ${staff.fullName}, just created a shift Offer`;
+  const messages = [];
   circles.forEach((circle) => {
     // do some computation and add to the staff
     eventListener.emit(notificationEvent, {
       notifType: "OFFER",
-      title: "New Offer has been created",
-      description: `Hey a member of your circle ${staff.fullName}, just created a shift Offer`,
+      title: title,
+      description: body,
       staffId: circle.staffId,
       companyId: staff.companyId,
       redirectId: offerid,
     });
+    const messaage = createExpoMessage(
+      circle.staff.messageToken,
+      title,
+      desc,
+      null,
+      offerid
+    );
+    if (messaage) {
+      messages.push(messaage);
+    }
   });
+  sendExpoMessage(messages);
 };
 
 exports.notifyOfferIsClaimed = async (staff, offer) => {
   // offer has been cliamed,
   // you claimed this offer
+  const title = "Offer claimed";
+  const body = `${staff.fullName} has claimed your offer for the ${offer.shift.date}`;
+
   eventListener.emit(notificationEvent, {
     notifType: "OFFER",
-    title: "Offer claimed",
-    description: `${staff.fullName} has claimed your offer for the ${offer.shift.date}`,
+    title: title,
+    description: body,
     staffId: offer.staffId,
     companyId: staff.companyId,
     redirectId: offer.id,
   });
+
+  const message = createExpoMessage(
+    staff.messageToken,
+    title,
+    body,
+    null,
+    redirectId
+  );
+  createExpoMessage([message]);
 };
 
 exports.notifyOfferUpdatedByCompany = (offer, statusval) => {
@@ -117,6 +157,22 @@ exports.notifyOfferUpdatedByCompany = (offer, statusval) => {
     companyId: offer.companyId,
     redirectId: offer.id,
   });
+
+  // const message = createExpoMessage(
+  //   offer.staffId.messageToken,
+  //   title,
+  //   description,
+  //   null,
+  //   offer.id
+  // );
+  // const message2 = createExpoMessage(
+  //   offer.claimerId.messageToken,
+  //   title,
+  //   description,
+  //   null,
+  //   offer.id
+  // );
+  // createExpoMessage([message, message2]);
 };
 
 exports.notifySwapCreated = (swap, staffname) => {

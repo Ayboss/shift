@@ -16,6 +16,8 @@ const {
   Company,
 } = require("../models");
 const status = require("../util/statusType");
+const { default: sendMail } = require("../util/emailService");
+const { welcomeHTML } = require("../util/emailTemplates");
 
 const statDetailsClause = {
   attributes: {
@@ -360,6 +362,12 @@ exports.addStaff = catchError(async (req, res, next) => {
     companyId: company.id,
   });
 
+  // send email to staff
+  sendMail(
+    `Welcome to SHFT – You’ve Been Added by ${company.companyName}!`,
+    welcomeHTML(company.companyName, staff.id),
+    req.body.email
+  );
   return res.status(201).json({
     status: "success",
     message: "A new staff has been added to your company",

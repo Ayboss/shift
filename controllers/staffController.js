@@ -329,6 +329,10 @@ exports.workingAtSameTime = catchError(async (req, res, next) => {
   // get the shift id , date and time ,  get others the shift with same time and same period
 
   const shift = await Shift.findOne({ where: { id: shiftId } });
+
+  if (!shift) {
+    return next(new AppError("shift not found", 404));
+  }
   const shifts = await Shift.findAll({
     where: { date: shift.date, type: shift.type },
     include: [
@@ -528,5 +532,16 @@ exports.getOffersAndSwaps = catchError(async (req, res, next) => {
   res.status(200).json({
     status: "success",
     data: combined,
+  });
+});
+
+exports.updateMessageToken = catchError(async (req, res, next) => {
+  const staff = req.user;
+  const { messageToken } = req.body;
+  staff.messageToken = messageToken;
+  await staff.save();
+  return res.status(200).json({
+    status: "success",
+    message: "message token added successfully",
   });
 });

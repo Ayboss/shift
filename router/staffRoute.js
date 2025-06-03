@@ -38,4 +38,5 @@ router.patch(
 );
 router.patch("/", staffController.updateStaff);
 router.get("/", staffController.getCurrentUserWithDashboard);
+router.patch("/messageToken", staffController.updateMessageToken);
 module.exports = router;

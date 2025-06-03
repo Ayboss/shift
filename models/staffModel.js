@@ -65,6 +65,10 @@ Staff.init(
       type: DataTypes.DATE,
       allowNull: true,
     },
+    messageToken: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
   },
   {
     sequelize,

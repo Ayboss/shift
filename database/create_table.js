@@ -132,7 +132,7 @@ const runRawSQLQueries = async () => {
 exports.init = function () {
   // create_admin_table();
   // create_company_table();
-  // create_staff_table();
+  create_staff_table();
   // create_shift_table();
   // create_offer_table();
   // create_swap_table();
@@ -140,5 +140,5 @@ exports.init = function () {
   // create_notification_table();
   // create_shifttype_table();
   // runRawSQLQueries();
-  create_waitlist_table();
+  // create_waitlist_table();
 };
