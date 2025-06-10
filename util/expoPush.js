@@ -3,7 +3,7 @@ const { Expo } = require("expo-server-sdk");
 // Create a new Expo SDK client
 // optionally providing an access token if you have enabled push security
 let expo = new Expo({
-  accessToken: process.env.EXPO_ACCESS_TOKEN,
+  // accessToken: process.env.EXPO_ACCESS_TOKEN,
   /*
    * @deprecated
    * The optional useFcmV1 parameter defaults to true, as FCMv1 is now the default for the Expo push service.
