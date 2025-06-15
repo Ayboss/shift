@@ -19,5 +19,6 @@ router.get("/staff/:staffId", companyController.getOneStaff);
 router.patch("/staff", companyController.updateStaff);
 router.patch("/staff/block/:staffId", companyController.blockStaff);
 router.delete("/staff", companyController.deleteStaff);
+router.put("/shift/swap", companyController.swapShift);
 
 module.exports = router;

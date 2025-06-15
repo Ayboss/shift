@@ -10,3 +10,5 @@
 - block and unblock a company
 - get staff in same shift should have not be duplicate
 - upcoming shift , just two datas
+
+- company swaps between two user

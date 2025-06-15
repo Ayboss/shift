@@ -10,6 +10,7 @@ const { hashPassword, comparePassword } = require("../util/passwordFunc");
 const { Op, where } = require("sequelize");
 const { Swap, Staff, Shift, Offer, ShiftType, Company } = require("../models");
 const status = require("../util/statusType");
+const { resetOTP } = require("../util/emailTemplates");
 
 async function calculateTheStatistic(staffId) {
   try {
@@ -278,6 +279,7 @@ exports.forgotPassword = catchError(async (req, res, next) => {
   staff.passwordResetExpires = undefined;
   staff.passwordResetToken = undefined;
   // send token to the mail
+  sendMail(`Password reset OTP!`, resetOTP(code), staff.email);
   const token = createJWTToken(staff.id);
   return res.status(200).json({
     status: "success",
@@ -431,7 +433,7 @@ exports.verifyStaffCompany = catchError(async (req, res, next) => {
   }
   return res.status(200).json({
     status: "success",
-    message: "staff information require",
+    message: "staff information required",
     data: staff.company,
   });
 });

@@ -447,3 +447,32 @@ exports.blockStaff = catchError(async (req, res, next) => {
 exports.updateStaff = catchError(async (req, res, next) => {});
 
 exports.deleteStaff = catchError(async (req, res, next) => {});
+
+exports.swapShift = catchError(async (req, res, next) => {
+  // get two shift id ,
+  // change the staff of the shift
+  // send message about the shift
+  const company = req.user;
+  const { shiftIDOne, shiftIDTwo } = req.body;
+  const shiftOne = await Shift.findOne({
+    where: { companyId: company.id, id: shiftIDOne },
+  });
+  if (!shiftOne) {
+    return next(new AppError("This shift does not exist ", 400));
+  }
+  const shiftTwo = await Shift.findOne({
+    where: { companyId: company.id, id: shiftIDOne },
+  });
+  if (!shiftTwo) {
+    return next(new AppError("This shift does not exist ", 400));
+  }
+  await Promise.all([
+    shiftOne.update({ staffId: shiftTwo.staffId }),
+    shiftTwo.update({ staffId: shiftOne.staffId }),
+  ]);
+  return res.status(200).json({
+    status: "success",
+    message: "Shift swapped",
+    data: swap,
+  });
+});
