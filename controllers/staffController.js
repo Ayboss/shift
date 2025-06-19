@@ -11,6 +11,8 @@ const { Op, where } = require("sequelize");
 const { Swap, Staff, Shift, Offer, ShiftType, Company } = require("../models");
 const status = require("../util/statusType");
 const { resetOTP } = require("../util/emailTemplates");
+const generateCode = require("../util/generateCode");
+const sendMail = require("../util/emailService");
 
 async function calculateTheStatistic(staffId) {
   try {
@@ -90,7 +92,6 @@ function confirmPasswordResetValididty(staff, code, next) {
 }
 
 exports.signup = catchError(async (req, res, next) => {
-  // return res.send("hiii ");
   const { email, fullName, shiftId } = req.body;
   if (!email || !fullName || !shiftId) {
     return next(new AppError("email, shiftid and fullname  is required", 400));
@@ -114,6 +115,7 @@ exports.signup = catchError(async (req, res, next) => {
 
   await staff.update({ fullName });
   // send user the shift code to his email
+
   const token = createJWTToken(staff.id);
   return res.status(200).json({
     status: "success",
@@ -272,14 +274,15 @@ exports.forgotPassword = catchError(async (req, res, next) => {
     return next(new AppError("this staff does not exist", 404));
   }
   // create code
-  code = "1111";
+  const code = generateCode();
   staff.passwordResetToken = code;
   staff.passwordResetExpires = Date.now() + 1000 * 60 * 10;
   await staff.save();
   staff.passwordResetExpires = undefined;
   staff.passwordResetToken = undefined;
   // send token to the mail
-  sendMail(`Password reset OTP!`, resetOTP(code), staff.email);
+
+  await sendMail(`Password reset OTP!`, resetOTP(code), staff.email);
   const token = createJWTToken(staff.id);
   return res.status(200).json({
     status: "success",
