@@ -2,10 +2,8 @@ const { createClient } = require("smtpexpress");
 const { welcomeHTML } = require("./emailTemplates");
 
 const smtpexpressClient = createClient({
-  projectId: process.env.SMTP_PROJECT_ID || "sm0pid-SJSSvo1jBTJ4yD9VcHvyutY7b",
-  projectSecret:
-    process.env.SMTP_PROJECT_SECRET ||
-    "a53e3adfd134309135af5baadb30cad3e1b53f85e57367f8fd",
+  projectId: process.env.SMTP_PROJECT_ID,
+  projectSecret: process.env.SMTP_PROJECT_SECRET,
 });
 
 async function sendMail(subject, message, email) {
@@ -14,7 +12,7 @@ async function sendMail(subject, message, email) {
       subject: subject,
       message: message,
       sender: {
-        name: "Ayo Ike",
+        name: "SHIFT",
         email: "shft-de5f91@smtpexpress.email",
       },
       recipients: email,
