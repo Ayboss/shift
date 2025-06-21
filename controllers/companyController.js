@@ -16,8 +16,9 @@ const {
   Company,
 } = require("../models");
 const status = require("../util/statusType");
-const { default: sendMail } = require("../util/emailService");
+
 const { welcomeHTML } = require("../util/emailTemplates");
+const sendMail = require("../util/emailService");
 
 const statDetailsClause = {
   attributes: {
