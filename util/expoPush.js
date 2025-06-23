@@ -142,4 +142,13 @@ function sendExpoMessage(messages) {
   //   })();
 }
 
+// const messaage = createExpoMessage(
+//   "ExponentPushToken[YTWYLeDxgqABjJGxw1nGhr]",
+//   "title",
+//   "desc",
+//   null,
+//   "offerid"
+// );
+// sendExpoMessage([messaage]);
+
 module.exports = { sendExpoMessage, createExpoMessage };

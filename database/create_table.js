@@ -120,7 +120,7 @@ const create_shifttype_table = () => {
 
 const runRawSQLQueries = async () => {
   try {
-    await sequelize.query(`ALTER TABLE staffs DROP INDEX fullName_2;`);
+    await sequelize.query(`ALTER TABLE staffs DROP INDEX email;`);
     console.log("Successfully dropped fullName unique index");
   } catch (error) {
     console.error("Failed to drop fullName unique index:", error);
@@ -132,7 +132,7 @@ const runRawSQLQueries = async () => {
 exports.init = function () {
   // create_admin_table();
   // create_company_table();
-  create_staff_table();
+  // create_staff_table();
   // create_shift_table();
   // create_offer_table();
   // create_swap_table();

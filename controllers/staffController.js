@@ -366,7 +366,11 @@ exports.getStaffs = catchError(async (req, res, next) => {
   const staff = req.user;
   const { limit, offset, page } = req.pagination;
   const { count, rows: staffs } = await Staff.findAndCountAll({
-    where: { companyId: staff.companyId, id: { [Op.not]: staff.id } },
+    where: {
+      companyId: staff.companyId,
+      id: { [Op.not]: staff.id },
+      verified: true,
+    },
     limit,
     offset,
   });

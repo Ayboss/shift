@@ -32,15 +32,16 @@ exports.notifyShiftDocumentUploaded = async (companyId) => {
       companyId: staff.companyId,
       redirectId: null,
     });
-    const messaage = createExpoMessage(
+
+    const message = createExpoMessage(
       staff.messageToken,
       title,
       desc,
       null,
       null
     );
-    if (messaage) {
-      messages.push(messaage);
+    if (message) {
+      messages.push(message);
     }
   }
   sendExpoMessage(messages);
@@ -90,15 +91,16 @@ exports.notifyOfferToCircle = async (staff, offerid) => {
       companyId: staff.companyId,
       redirectId: offerid,
     });
-    const messaage = createExpoMessage(
+
+    const message = createExpoMessage(
       circle.staff.messageToken,
       title,
       desc,
       null,
       offerid
     );
-    if (messaage) {
-      messages.push(messaage);
+    if (message) {
+      messages.push(message);
     }
   });
   sendExpoMessage(messages);

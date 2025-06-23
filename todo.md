@@ -12,3 +12,5 @@
 - upcoming shift , just two datas
 
 - company swaps between two user
+- don't return user that does not have a completed profile
+- Learn how to write test in node js

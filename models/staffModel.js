@@ -84,14 +84,6 @@ Staff.init(
     hooks: {
       beforeCreate: async (staff) => {
         staff.id = await generateUniqueEntityId("SHFT", Staff);
-        const existingStaff = await Staff.findOne({
-          where: { email: staff.email, companyId: staff.companyId },
-        });
-        if (existingStaff) {
-          throw new Error(
-            "A staff member with this email already exists in the company."
-          );
-        }
       },
     },
     defaultScope: {
