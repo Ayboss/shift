@@ -8,3 +8,4 @@ exports.shiftRouter = require("./shiftRoute");
 exports.staffRouter = require("./staffRoute");
 exports.shiftTypeRouter = require("./shiftTypeRoute");
 exports.waitlistRouter = require("./waitlistRoute");
+exports.attendanceRouter = require("./attendanceRoute");

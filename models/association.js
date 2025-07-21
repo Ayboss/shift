@@ -8,6 +8,7 @@ const associateModels = (models) => {
     Staff,
     Swap,
     Notification,
+    Attendance,
   } = models;
   // Define relationships
   // COMPANIES
@@ -54,6 +55,10 @@ const associateModels = (models) => {
   // NOTIFICATION
   Notification.belongsTo(Staff, { foreignKey: "staffId", as: "staff" });
   Notification.belongsTo(Company, { foreignKey: "companyId", as: "company" });
+
+  // ATTENDANCE
+  Attendance.belongsTo(Staff, { foreignKey: "staffId", as: "staff" });
+  Attendance.belongsTo(Company, { foreignKey: "companyId", as: "company" });
 };
 
 module.exports = associateModels;

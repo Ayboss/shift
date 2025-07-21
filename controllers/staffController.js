@@ -2,7 +2,7 @@ const sequelize = require("../database/database");
 const AppError = require("../util/appError");
 const catchError = require("../util/catchError");
 const { storeImageInCLoud } = require("../util/cloudinary");
-const createJWTToken = require("../util/createJWTToken");
+const { createJWTToken } = require("../util/createJWTToken");
 const { formatShitdata } = require("../util/formatData");
 const { formatStats } = require("../util/formatStats");
 const logger = require("../util/logger");
@@ -339,7 +339,7 @@ exports.workingAtSameTime = catchError(async (req, res, next) => {
     return next(new AppError("shift not found", 404));
   }
   const shifts = await Shift.findAll({
-    where: { date: shift.date, type: shift.type },
+    where: { date: shift.date, type: shift.type, companyId: user.companyId },
     include: [
       {
         model: Staff,

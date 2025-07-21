@@ -1,4 +1,4 @@
-require("dotenv").config("./env");
+require("dotenv").config();
 const logger = require("./util/logger");
 const app = require("./app");
 require("./database/create_table").init();

@@ -174,3 +174,81 @@ exports.addBulkShift = catchError(async (req, res, next) => {
     data: null,
   });
 });
+
+exports.addBulkShiftJson = catchError(async (req, res, next) => {
+  const company = req.user;
+  const shifts = req.body.shifts;
+  const incomingStaffs = shifts.map((s) => s.staffId);
+  const validStaffs = await Staff.findAll({
+    where: { id: incomingStaffs, companyId: company.id },
+    attributes: ["id"],
+    raw: true,
+  });
+  const validIds = new Set(validStaffs.map((s) => s.id));
+  const processedShifts = [];
+  for (const shift of shifts) {
+    if (validIds.has(shift.staffId)) {
+      processedShifts.push({
+        companyId: company.id,
+        staffId: shift.staffId,
+        date: shift.date,
+        type: shift.type,
+      });
+    }
+  }
+  await Offer.destroy({ where: { companyId: company.id } });
+  await Swap.destroy({ where: { companyId: company.id } });
+  await Shift.destroy({ where: { companyId: company.id } });
+  await Shift.bulkCreate(processedShifts);
+  notifyShiftDocumentUploaded(company.id);
+  return res.status(200).json({
+    status: "success",
+    data: null,
+  });
+});
+
+exports.updateShift = catchError(async (req, res, next) => {
+  // get the details and see if the user does not have a shift that same day, before changing
+  const shiftId = req.params.shiftId;
+  const shift = await Shift.findOne({
+    where: { id: shiftId },
+  });
+  if (!shift) {
+    return next(new AppError("Shift does not exist", 404));
+  }
+
+  const date = req.body?.date || shift.date;
+  const type = req.body?.type || shift.type;
+  if (
+    await Shift.findOne({
+      where: {
+        staffId: shift.staffId,
+        date: date,
+        type: type,
+      },
+    })
+  ) {
+    return next(
+      new AppError("A shift with this day and type already exist", 400)
+    );
+  }
+  await shift.update({
+    date,
+    type,
+  });
+
+  res.status(200).json({
+    status: "success",
+    data: shift,
+  });
+});
+
+exports.deleteShift = catchError(async (req, res, next) => {
+  // delete, the shift
+  const shiftId = req.params.shiftId;
+  await Shift.destroy({ where: { id: shiftId } });
+  return res.status(200).json({
+    status: "success",
+    data: shiftId,
+  });
+});

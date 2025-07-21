@@ -1,6 +1,6 @@
 const catchError = require("../util/catchError");
 const { hashPassword, comparePassword } = require("../util/passwordFunc");
-const createJWTToken = require("../util/createJWTToken");
+const { createJWTToken } = require("../util/createJWTToken");
 const AppError = require("../util/appError");
 const companyController = require("../controllers/companyController");
 const sequelize = require("../database/database");

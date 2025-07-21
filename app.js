@@ -31,7 +31,7 @@ app.use("/api/v1/swap", routers.swapRouter);
 app.use("/api/v1/circle", routers.circleRouter);
 app.use("/api/v1/notification", routers.notificationRouter);
 app.use("/api/v1/shifttype", routers.shiftTypeRouter);
-
+app.use("/api/v1/attendance", routers.attendanceRouter);
 app.use(errorController);
 
 module.exports = app;

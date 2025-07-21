@@ -9,7 +9,7 @@ const Swap = require("./swapModel");
 const Notification = require("./notificationModel");
 const Admin = require("./adminModel");
 const WaitList = require("./waitListModel");
-
+const Attendance = require("./attendanceModel");
 const models = {
   Circle,
   Company,
@@ -21,6 +21,7 @@ const models = {
   Notification,
   Admin,
   WaitList,
+  Attendance,
 };
 associateModels(models);
 

@@ -10,3 +10,4 @@ exports.shiftTypeController = require("./shiftTypeController");
 exports.staffController = require("./staffController");
 exports.swapController = require("./swapController");
 exports.utilsController = require("./utilsController");
+exports.attendanceController = require("./attendanceController");
