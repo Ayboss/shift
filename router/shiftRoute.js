@@ -27,6 +27,7 @@ router.use(authController.protectCompany);
 // company alone
 router.post("/upload", uploadXlsFile, shiftController.addBulkShift);
 router.post("/addbulk", shiftController.addBulkShiftJson);
+router.post("/:staffId/addbulk", shiftController.addBulkForStaff);
 router.patch("/:shiftId", shiftController.updateShift); // update a particular shift
 router.delete("/:shiftId", shiftController.deleteShift); // delete a particular shift
 

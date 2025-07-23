@@ -1,5 +1,6 @@
 const { WaitList } = require("../models");
 const Admin = require("../models/adminModel");
+const Attendance = require("../models/attendanceModel");
 const Circle = require("../models/circleModel");
 const Company = require("../models/companyModel");
 const Notification = require("../models/notificationModel");
@@ -118,6 +119,17 @@ const create_shifttype_table = () => {
     });
 };
 
+const create_attendance_table = () => {
+  Attendance.sync({ alter: true })
+    .then(() => {
+      logger.info("attendance created");
+    })
+    .catch((err) => {
+      console.log(err);
+      logger.error("attendance not created");
+    });
+};
+
 const runRawSQLQueries = async () => {
   try {
     await sequelize.query(`ALTER TABLE staffs DROP INDEX email;`);
@@ -141,4 +153,5 @@ exports.init = function () {
   // create_shifttype_table();
   // runRawSQLQueries();
   // create_waitlist_table();
+  create_attendance_table();
 };

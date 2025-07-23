@@ -252,3 +252,54 @@ exports.deleteShift = catchError(async (req, res, next) => {
     data: shiftId,
   });
 });
+
+exports.addBulkForStaff = catchError(async (req, res, next) => {
+  const staffId = req.params;
+  const company = req.user;
+  const shifts = req.body.shifts;
+
+  const staff = await Staff.findOne({
+    where: { id: staffId, companyId: company.id },
+  });
+  if (!staff) {
+    return next(
+      new AppError("This staff does not belong in this company ", 400)
+    );
+  }
+  const uniqueShifts = [];
+  const incomingKeys = new Set();
+  for (const shift of shifts) {
+    const key = `${shift.date}||${shift.time}`;
+    if (!incomingKeys.has(key)) {
+      uniqueShifts.append(shift);
+      incomingKeys.add(key);
+    }
+  }
+  const incomingShift = uniqueShifts.map((el) => el.date);
+
+  const existing = await Shift.findAll({
+    where: {
+      companyId: company.id,
+      staffId,
+      date: incomingShift,
+    },
+    attributes: ["date", "type"],
+    raw: true,
+  });
+
+  const existingSet = new Set(existing.map((e) => `${e.date}||${e.type}`));
+  const toCreate = uniqueShifts
+    .filter((s) => !existingSet.has(`${s.date}||${s.type}`))
+    .map((s) => ({
+      companyId: company.id,
+      staffId,
+      date: s.date,
+      type: s.type,
+    }));
+  const newshifts = await Shift.bulkCreate(toCreate);
+
+  return res.status(200).json({
+    status: "success",
+    data: newshifts,
+  });
+});

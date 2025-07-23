@@ -18,10 +18,19 @@ function makeTodayTime(timestr, baseDate) {
 exports.getCompanyAttendance = catchError(async (req, res, next) => {
   const { limit, offset, page } = req.pagination;
   const company = req.user;
+  const where = { companyId: company.id };
+  const { date } = req.query;
+  if (date) {
+    where["date"] = date;
+  }
   const { count, rows: attendance } = await Attendance.findAndCountAll({
     limit,
     offset,
-    where: { companyId: company.id },
+    where: where,
+    order: [
+      ["date", "DESC"],
+      ["time", "ASC"],
+    ],
   });
   return res.status(200).json({
     status: "success",
