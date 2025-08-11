@@ -14,14 +14,20 @@ exports.getAllShifts = catchError(async (req, res, next) => {
     limit,
     offset,
   });
+  let formatshift = shifts;
   // find all shifttype belonging to company id, order in terms of start date
   const shiftTypes = await ShiftType.findAll({
     where: { companyId: req.user.companyId },
     order: [["startTime", "ASC"]],
   });
+
+  if (req.query.format == "true") {
+    formatshift = formatShitdata(shifts, shiftTypes);
+  }
+
   return res.status(200).json({
     status: "success",
-    data: shifts,
+    data: formatshift,
     shiftTypes: shiftTypes,
     meta: {
       total: count,
@@ -63,6 +69,25 @@ exports.getOneShift = catchError(async (req, res, next) => {
   });
 });
 
+exports.getShiftByDate = catchError(async (req, res, next) => {
+  const { date, staffId } = req.params;
+
+  // check out all shifts for this day
+  let shifts = await Shift.findAll({ where: { date, staffId } });
+  const shiftTypes = await ShiftType.findAll({
+    where: { companyId: req.user.companyId },
+    order: [["startTime", "ASC"]],
+  });
+  if (req.query.format == "true") {
+    shifts = formatShitdata(shifts, shiftTypes);
+  }
+
+  return res.status(200).json({
+    status: "success",
+    data: shifts,
+    shiftTypes: shiftTypes,
+  });
+});
 exports.getAllStaffShift = catchError(async (req, res, next) => {
   const { staffId } = req.params;
   let shifts = await Shift.findAll({
@@ -254,13 +279,13 @@ exports.deleteShift = catchError(async (req, res, next) => {
 });
 
 exports.addBulkForStaff = catchError(async (req, res, next) => {
-  const staffId = req.params;
+  const { staffId } = req.params;
   const company = req.user;
   const shifts = req.body.shifts;
-
   const staff = await Staff.findOne({
     where: { id: staffId, companyId: company.id },
   });
+
   if (!staff) {
     return next(
       new AppError("This staff does not belong in this company ", 400)
@@ -269,9 +294,9 @@ exports.addBulkForStaff = catchError(async (req, res, next) => {
   const uniqueShifts = [];
   const incomingKeys = new Set();
   for (const shift of shifts) {
-    const key = `${shift.date}||${shift.time}`;
+    const key = `${shift.date}||${shift.type}`;
     if (!incomingKeys.has(key)) {
-      uniqueShifts.append(shift);
+      uniqueShifts.push(shift);
       incomingKeys.add(key);
     }
   }
@@ -296,6 +321,7 @@ exports.addBulkForStaff = catchError(async (req, res, next) => {
       date: s.date,
       type: s.type,
     }));
+
   const newshifts = await Shift.bulkCreate(toCreate);
 
   return res.status(200).json({

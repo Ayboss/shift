@@ -22,6 +22,11 @@ router.get(
   authController.protect,
   shiftController.getAllStaffShift
 );
+router.get(
+  "/date/:staffId/:date",
+  authController.protect,
+  shiftController.getShiftByDate
+);
 
 router.use(authController.protectCompany);
 // company alone
