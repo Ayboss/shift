@@ -99,25 +99,28 @@ exports.isVerified = catchError(async (req, res, next) => {
 
 exports.protect = catchError(async (req, res, next) => {
   const decode = await checkAndDecode(req, next);
-  const type =
-    (req.query.type && req.query.type.toLowerCase()) == "company"
-      ? "company"
-      : "user";
+  const type = req.query.type && req.query.type.toLowerCase();
 
   let currentUser = null;
   if (type == "company") {
     currentUser = await Company.findOne({ where: { id: decode.id } });
-    req.companyId = currentUser?.id;
+    currentUser.companyId = currentUser?.id;
+  } else if (type == "user") {
+    currentUser = await Staff.findOne({ where: { id: decode.id } });
+    currentUser.staffId = currentUser?.id;
   } else {
     currentUser = await Staff.findOne({ where: { id: decode.id } });
+    if (!currentUser) {
+      currentUser = await Company.findOne({ where: { id: decode.id } });
+      currentUser.companyId = currentUser?.id;
+    } else {
+      currentUser.staffId = currentUser?.id;
+    }
   }
   if (!currentUser) {
     return next(new AppError("user with token does not exit", 401));
   }
 
-  if (type == "company") {
-    currentUser.companyId = currentUser?.id;
-  }
   req.user = currentUser;
   next();
 });
