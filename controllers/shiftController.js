@@ -92,6 +92,7 @@ exports.getAllStaffShift = catchError(async (req, res, next) => {
   const { staffId } = req.params;
   let shifts = await Shift.findAll({
     where: { companyId: req.user.companyId, staffId: staffId },
+    order: [["date", "ASC"]],
   });
   const shiftTypes = await ShiftType.findAll({
     where: { companyId: req.user.companyId },
@@ -300,30 +301,28 @@ exports.addBulkForStaff = catchError(async (req, res, next) => {
       incomingKeys.add(key);
     }
   }
-  const incomingShift = uniqueShifts.map((el) => el.date);
 
-  const existing = await Shift.findAll({
-    where: {
-      companyId: company.id,
-      staffId,
-      date: incomingShift,
-    },
-    attributes: ["date", "type"],
-    raw: true,
-  });
+  // const existing = await Shift.findAll({
+  //   where: {
+  //     companyId: company.id,
+  //     staffId,
+  //   },
+  //   attributes: ["date", "type", "id"],
+  //   raw: true,
+  // });
 
-  const existingSet = new Set(existing.map((e) => `${e.date}||${e.type}`));
-  const toCreate = uniqueShifts
-    .filter((s) => !existingSet.has(`${s.date}||${s.type}`))
-    .map((s) => ({
-      companyId: company.id,
-      staffId,
-      date: s.date,
-      type: s.type,
-    }));
+  // const toDelete = existing.filter((e) => {
+  //   return !incomingKeys.has(`${e.date}||${e.type}`);
+  // });
+  const toCreate = uniqueShifts.map((s) => ({
+    companyId: company.id,
+    staffId,
+    date: s.date,
+    type: s.type,
+  }));
 
+  await Shift.destroy({ where: { staffId: staffId } });
   const newshifts = await Shift.bulkCreate(toCreate);
-
   return res.status(200).json({
     status: "success",
     data: newshifts,
