@@ -14,95 +14,128 @@ const {
   Notification,
   Staff,
   Company,
+  ShiftType,
 } = require("../models");
 const status = require("../util/statusType");
 
 const { welcomeHTML } = require("../util/emailTemplates");
 const sendMail = require("../util/emailService");
 
-const statDetailsClause = {
-  attributes: {
+function safeAlias(name) {
+  return String(name)
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_"); // e.g., "Morning Shift" -> "morning_shift"
+}
+
+const statDetailsClause = async function (companyId) {
+  const types = await ShiftType.findAll({
+    where: { companyId },
+    attributes: ["name"],
+    raw: true,
+  });
+
+  // 2) build dynamic SUM(CASE WHEN ...) columns safely
+  const typeAggs = types.map(({ name }) => {
+    const alias = `${safeAlias(name)}_count`;
+    // escape the value to be safe in the literal
+    const safeValue = sequelize.escape(name);
+    return [
+      fn(
+        "SUM",
+        literal(`CASE WHEN shifts.type = ${safeValue} THEN 1 ELSE 0 END`)
+      ),
+      alias,
+    ];
+  });
+  return {
+    attributes: {
+      include: [
+        ...typeAggs,
+        [fn("COUNT", col("shifts.id")), "shiftsCount"],
+
+        [
+          fn(
+            "SUM",
+            literal(`CASE WHEN offers.status = 'OPEN' THEN 1 ELSE 0 END`)
+          ),
+          "offersOpen",
+        ],
+        [
+          fn(
+            "SUM",
+            literal(`CASE WHEN offers.status = 'IN_REVIEW' THEN 1 ELSE 0 END`)
+          ),
+          "offersReview",
+        ],
+        [
+          fn(
+            "SUM",
+            literal(`CASE WHEN offers.status = 'ACCEPTED' THEN 1 ELSE 0 END`)
+          ),
+          "offersAccepted",
+        ],
+        [
+          fn(
+            "SUM",
+            literal(`CASE WHEN offers.status = 'DECLINED' THEN 1 ELSE 0 END`)
+          ),
+          "offersDeclined",
+        ],
+
+        [
+          fn(
+            "SUM",
+            literal(`CASE WHEN swaps.status = 'OPEN' THEN 1 ELSE 0 END`)
+          ),
+          "swapsOpen",
+        ],
+        [
+          fn(
+            "SUM",
+            literal(`CASE WHEN swaps.status = 'IN_REVIEW' THEN 1 ELSE 0 END`)
+          ),
+          "swapsReview",
+        ],
+        [
+          fn(
+            "SUM",
+            literal(`CASE WHEN swaps.status = 'ACCEPTED' THEN 1 ELSE 0 END`)
+          ),
+          "swapsAccepted",
+        ],
+        [
+          fn(
+            "SUM",
+            literal(`CASE WHEN swaps.status = 'DECLINED' THEN 1 ELSE 0 END`)
+          ),
+          "swapsDeclined",
+        ],
+      ],
+    },
     include: [
-      [fn("COUNT", col("shifts.id")), "shiftsCount"],
-
-      [
-        fn(
-          "SUM",
-          literal(`CASE WHEN offers.status = 'OPEN' THEN 1 ELSE 0 END`)
-        ),
-        "offersOpen",
-      ],
-      [
-        fn(
-          "SUM",
-          literal(`CASE WHEN offers.status = 'IN_REVIEW' THEN 1 ELSE 0 END`)
-        ),
-        "offersReview",
-      ],
-      [
-        fn(
-          "SUM",
-          literal(`CASE WHEN offers.status = 'ACCEPTED' THEN 1 ELSE 0 END`)
-        ),
-        "offersAccepted",
-      ],
-      [
-        fn(
-          "SUM",
-          literal(`CASE WHEN offers.status = 'DECLINED' THEN 1 ELSE 0 END`)
-        ),
-        "offersDeclined",
-      ],
-
-      [
-        fn("SUM", literal(`CASE WHEN swaps.status = 'OPEN' THEN 1 ELSE 0 END`)),
-        "swapsOpen",
-      ],
-      [
-        fn(
-          "SUM",
-          literal(`CASE WHEN swaps.status = 'IN_REVIEW' THEN 1 ELSE 0 END`)
-        ),
-        "swapsReview",
-      ],
-      [
-        fn(
-          "SUM",
-          literal(`CASE WHEN swaps.status = 'ACCEPTED' THEN 1 ELSE 0 END`)
-        ),
-        "swapsAccepted",
-      ],
-      [
-        fn(
-          "SUM",
-          literal(`CASE WHEN swaps.status = 'DECLINED' THEN 1 ELSE 0 END`)
-        ),
-        "swapsDeclined",
-      ],
+      {
+        model: Shift,
+        as: "shifts",
+        attributes: [],
+        required: false, // Make this a LEFT JOIN
+      },
+      {
+        model: Offer,
+        as: "offers",
+        attributes: [],
+        required: false, // Make this a LEFT JOIN
+      },
+      {
+        model: Swap,
+        as: "swaps",
+        attributes: [],
+        required: false, // Make this a LEFT JOIN
+      },
     ],
-  },
-  include: [
-    {
-      model: Shift,
-      as: "shifts",
-      attributes: [],
-      required: false, // Make this a LEFT JOIN
-    },
-    {
-      model: Offer,
-      as: "offers",
-      attributes: [],
-      required: false, // Make this a LEFT JOIN
-    },
-    {
-      model: Swap,
-      as: "swaps",
-      attributes: [],
-      required: false, // Make this a LEFT JOIN
-    },
-  ],
-  group: ["Staff.id"],
-  subQuery: false, // This is the key change - prevent Sequelize from creating a subquery
+    group: ["Staff.id"],
+    subQuery: false, // This is the key change - prevent Sequelize from creating a subquery
+  };
 };
 
 const getAnalytics = async (company) => {
@@ -384,17 +417,18 @@ exports.addStaff = catchError(async (req, res, next) => {
 exports.getStaff = catchError(async (req, res, next) => {
   const company = req.user;
   const { limit, offset, page } = req.pagination;
-  const [count, staffs] = await Promise.all([
-    Staff.count({
-      where: { companyId: company.id },
-    }),
-    Staff.findAll({
-      where: { companyId: company.id },
-      ...statDetailsClause,
-      limit,
-      offset,
-    }),
+
+  const [count, clause] = await Promise.all([
+    Staff.count({ where: { companyId: company.id } }),
+    statDetailsClause(company.id), // <-- IMPORTANT: await the dynamic attrs
   ]);
+
+  const staffs = await Staff.findAll({
+    where: { companyId: company.id },
+    ...clause,
+    limit,
+    offset,
+  });
 
   return res.status(200).json({
     status: "success",
@@ -411,9 +445,10 @@ exports.getStaff = catchError(async (req, res, next) => {
 exports.getOneStaff = catchError(async (req, res, next) => {
   const company = req.user;
   const staffId = req.params.staffId;
+  const clause = await statDetailsClause(company.id);
   const staff = await Staff.findOne({
     where: { companyId: company.id, id: staffId },
-    ...statDetailsClause,
+    ...clause,
   });
   if (!staff) {
     return next(new AppError("this staff does not exist", 404));
