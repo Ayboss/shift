@@ -1,5 +1,7 @@
 const express = require("express");
+const path = require("path");
 const cors = require("cors");
+
 const errorController = require("./controllers/errorController");
 const routers = require("./router/index");
 
@@ -7,6 +9,7 @@ const routers = require("./router/index");
 require("./controllers/eventlisteners");
 
 app = express();
+app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
@@ -32,6 +35,7 @@ app.use("/api/v1/circle", routers.circleRouter);
 app.use("/api/v1/notification", routers.notificationRouter);
 app.use("/api/v1/shifttype", routers.shiftTypeRouter);
 app.use("/api/v1/attendance", routers.attendanceRouter);
+app.use("/api/v1/payment", routers.paymentRouter);
 app.use(errorController);
 
 module.exports = app;

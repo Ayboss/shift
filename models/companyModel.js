@@ -1,6 +1,7 @@
 const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../database/database");
 const generateUniqueEntityId = require("../util/generateUniqueEntityId");
+const subscriptionType = require("../util/subscriptionType");
 
 class Company extends Model {}
 
@@ -45,6 +46,14 @@ Company.init(
       validate: { min: 1 }, // Ensures at least 1 staff member
     },
     password: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    subscription: {
+      type: DataTypes.ENUM(subscriptionType.INACTIVE, subscriptionType.ACTIVE),
+      defaultValue: subscriptionType.INACTIVE,
+    },
+    subscriptionOrderId: {
       type: DataTypes.STRING,
       allowNull: true,
     },

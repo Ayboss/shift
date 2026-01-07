@@ -153,5 +153,5 @@ exports.init = function () {
   // create_shifttype_table();
   // runRawSQLQueries();
   // create_waitlist_table();
-  create_attendance_table();
+  // create_attendance_table();
 };

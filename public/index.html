@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://www.paypal.com/sdk/js?client-id=Acs_mO9SxebKUSx919sGe3JEGZStbtQc6aIfhNGdAlKXtgfR-X55DJ6Y8ipPgIfcsfV7BRuoBeaJAL7S&currency=USD&intent=capture&components=buttons"></script>
+    <!-- <script src="https://www.paypal.com/sdk/js
+  ?client-id=Acs_mO9SxebKUSx919sGe3JEGZStbtQc6aIfhNGdAlKXtgfR-X55DJ6Y8ipPgIfcsfV7BRuoBeaJAL7S
+  &currency=USD
+  &intent=capture
+  &components=buttons"></script> -->
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="paypal-button"></div>
+
+    <script>
+      paypal
+        .Buttons({
+          style: {
+            layout: "vertical",
+            color: "black",
+            shape: "rect",
+            height: 48,
+            label: "pay",
+          },
+
+          // 1️⃣ Create order
+          createOrder: async () => {
+            const res = await fetch("/api/v1/payment/company/createOrder", {
+              method: "POST",
+            });
+            const data = await res.json();
+            return data.orderID;
+          },
+
+          // 2️⃣ Capture order
+          onApprove: async (data) => {
+            const res = await fetch(
+              `/api/v1/payment/company/captureOrder/${data.orderID}`,
+              {
+                method: "POST",
+              }
+            );
+            const details = await res.json();
+            console.log("Payment successful", details);
+          },
+
+          onError: (err) => {
+            console.error("PayPal error", err);
+          },
+        })
+        .render("#paypal-button");
+    </script>
+  </body>
+</html>
