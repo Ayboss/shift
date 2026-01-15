@@ -141,6 +141,7 @@ const runRawSQLQueries = async () => {
 
 // create_notification_table();
 // create_staff_table();
+// runRawSQLQueries();
 exports.init = function () {
   // create_admin_table();
   // create_company_table();
@@ -151,7 +152,6 @@ exports.init = function () {
   // create_circle_table();
   // create_notification_table();
   // create_shifttype_table();
-  // runRawSQLQueries();
   // create_waitlist_table();
   // create_attendance_table();
 };

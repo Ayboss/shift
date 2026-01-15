@@ -14,7 +14,7 @@ const DB_password =
 
 const sequelize = new Sequelize(DB_name, DB_user, DB_password, {
   host: DB_host,
-  dialect: "mysql",
+  dialect: "postgres",
   logging: false, // Set to true if you want to see SQL queries in the console
 });
 
