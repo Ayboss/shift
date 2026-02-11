@@ -1,7 +1,8 @@
 const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../database/database");
 const generateUniqueEntityId = require("../util/generateUniqueEntityId");
-const subscriptionType = require("../util/subscriptionType");
+const subscriptionState = require("../util/subscriptionState");
+const { subscriptionType } = require("../util/subscriptionType");
 
 class Company extends Model {}
 
@@ -49,14 +50,6 @@ Company.init(
       type: DataTypes.STRING,
       allowNull: true,
     },
-    subscription: {
-      type: DataTypes.ENUM(subscriptionType.INACTIVE, subscriptionType.ACTIVE),
-      defaultValue: subscriptionType.INACTIVE,
-    },
-    subscriptionOrderId: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
   },
   {
     sequelize,
@@ -73,7 +66,7 @@ Company.init(
     scopes: {
       withPassword: { attributes: { include: ["password"] } },
     },
-  }
+  },
 );
 
 module.exports = Company;

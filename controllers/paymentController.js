@@ -1,9 +1,13 @@
 const { where } = require("sequelize");
-const { Company } = require("../models");
+const { Company, Subscription } = require("../models");
 const catchError = require("../util/catchError");
 const axios = require("axios");
-const subscriptionType = require("../util/subscriptionType");
+const subscriptionState = require("../util/subscriptionState");
 const AppError = require("../util/appError");
+const {
+  subscriptionType,
+  subscriptionTypePrice,
+} = require("../util/subscriptionType");
 
 const PAYPAL_BASE =
   process.env.ENV === "production"
@@ -33,20 +37,49 @@ async function getAccessToken() {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
-    }
+    },
   );
   return data.access_token;
 }
 
+const addOneMonth = (date) => {
+  const newDate = new Date(date);
+  newDate.setMonth(newDate.getMonth() + 1);
+  return newDate;
+};
+
 exports.createOrder = catchError(async (req, res, next) => {
   try {
+    let subType = req.body.subscriptionType;
     const company = req.user;
-    if (company.subscription == subscriptionType.ACTIVE) {
+    if (!subType) {
+      return next(new AppError("Please privide a subcription type"));
+    }
+    subType = subType.toUpperCase();
+    if (!(subType in subscriptionType)) {
       return next(
-        new AppError("This user already has an active subscription", 400)
+        new AppError(
+          "Please privide a valid subcription type, STARTER, GROWTH, SCALE, ENTERPRISE",
+          400,
+        ),
       );
     }
+
+    const existingActive = await Subscription.findOne({
+      where: {
+        companyId: company.id,
+        status: subscriptionState.ACTIVE,
+      },
+    });
+
+    if (existingActive) {
+      return next(
+        new AppError("This company already has an active subscription", 400),
+      );
+    }
+
     const token = await getAccessToken();
+
     const { data } = await axios.post(
       `${PAYPAL_BASE}/v2/checkout/orders`,
       {
@@ -55,7 +88,7 @@ exports.createOrder = catchError(async (req, res, next) => {
           {
             amount: {
               currency_code: "USD",
-              value: "30.00",
+              value: subscriptionTypePrice[subType].price,
             },
           },
         ],
@@ -64,16 +97,19 @@ exports.createOrder = catchError(async (req, res, next) => {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      }
-    );
-    await Company.update(
-      { subscriptionOrderId: data.id },
-      { where: { id: company.id } }
+      },
     );
 
-    res.json({ orderID: data.id });
+    const subscription = await Subscription.create({
+      companyId: company.id,
+      plan: subType,
+      price: subscriptionTypePrice[subType].price,
+      paypalOrderId: data.id,
+      status: subscriptionState.PENDING,
+    });
+    res.json({ orderID: data.id, subscriptionId: subscription.id });
   } catch (err) {
-    console.log(err.response.data);
+    console.log(err);
     return res.status(400).send("ERROR");
   }
 });
@@ -81,8 +117,8 @@ exports.createOrder = catchError(async (req, res, next) => {
 exports.captureOrder = catchError(async (req, res, next) => {
   try {
     const company = req.user;
-    const token = await getAccessToken();
     const { orderId } = req.params;
+    const token = await getAccessToken();
 
     const { data } = await axios.post(
       `${PAYPAL_BASE}/v2/checkout/orders/${orderId}/capture`,
@@ -91,17 +127,44 @@ exports.captureOrder = catchError(async (req, res, next) => {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      }
+      },
     );
 
-    if (company.subscriptionOrderId == orderId) {
-      await company.update({
-        subscription: subscriptionType.ACTIVE,
-      });
+    const subscription = await Subscription.findOne({
+      where: {
+        companyId: company.id,
+        paypalOrderId: orderId,
+        status: subscriptionState.PENDING,
+      },
+    });
+    if (!subscription) {
+      return next(
+        new AppError("Subscription not found or already processed", 404),
+      );
     }
+
+    // 🔹 Expire any currently ACTIVE subscription
+    await Subscription.update(
+      { status: subscriptionState.EXPIRED },
+      {
+        where: {
+          companyId: company.id,
+          status: subscriptionState.ACTIVE,
+        },
+      },
+    );
+
+    // 🔹 Activate new subscription
+    await subscription.update({
+      status: subscriptionState.ACTIVE,
+      paypalCaptureId: data.purchase_units[0].payments.captures[0].id,
+      startDate: new Date(),
+      endDate: addOneMonth(new Date()),
+    });
+
     res.json(data);
   } catch (err) {
-    console.log(err.response.data);
+    console.log(err);
     return res.status("400").send("ERROR");
   }
 });
@@ -117,7 +180,7 @@ exports.captureWebhook = catchError(async (req, res, next) => {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      }
+      },
     );
 
     res.json(data);

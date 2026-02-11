@@ -10,6 +10,7 @@ const Notification = require("./notificationModel");
 const Admin = require("./adminModel");
 const WaitList = require("./waitListModel");
 const Attendance = require("./attendanceModel");
+const Subscription = require("./subscriptionModel");
 const models = {
   Circle,
   Company,
@@ -22,6 +23,7 @@ const models = {
   Admin,
   WaitList,
   Attendance,
+  Subscription,
 };
 associateModels(models);
 

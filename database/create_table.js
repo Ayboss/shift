@@ -9,6 +9,7 @@ const Shift = require("../models/shiftModel");
 const ShiftType = require("../models/shiftTypeModel");
 const Staff = require("../models/staffModel");
 const Swap = require("../models/swapModel");
+const Subcription = require("../models/subscriptionModel");
 const logger = require("../util/logger");
 const sequelize = require("./database");
 
@@ -130,6 +131,17 @@ const create_attendance_table = () => {
     });
 };
 
+const create_subscription_table = () => {
+  Subcription.sync({ alter: true })
+    .then(() => {
+      logger.info("subcription created");
+    })
+    .catch((err) => {
+      console.log(err);
+      logger.error("subcription not created");
+    });
+};
+
 const runRawSQLQueries = async () => {
   try {
     await sequelize.query(`ALTER TABLE staffs DROP INDEX email;`);
@@ -144,7 +156,7 @@ const runRawSQLQueries = async () => {
 // runRawSQLQueries();
 exports.init = function () {
   // create_admin_table();
-  // create_company_table();
+  create_company_table();
   // create_staff_table();
   // create_shift_table();
   // create_offer_table();
@@ -154,4 +166,5 @@ exports.init = function () {
   // create_shifttype_table();
   // create_waitlist_table();
   // create_attendance_table();
+  create_subscription_table();
 };
