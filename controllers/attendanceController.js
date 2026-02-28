@@ -1,5 +1,5 @@
 const { DateTime } = require("luxon");
-const { Attendance, ShiftType, Shift } = require("../models");
+const { Attendance, ShiftType, Shift, Staff } = require("../models");
 const AppError = require("../util/appError");
 const catchError = require("../util/catchError");
 const {
@@ -7,14 +7,6 @@ const {
   verifyAttendanceToken,
 } = require("../util/createJWTToken");
 const QRCode = require("qrcode");
-
-// Helper to turn a "HH:mm:ss" into a Date on the given baseDate
-function makeTodayTime(timestr, baseDate) {
-  const [h, m, s] = timestr.split(":").map(Number);
-  const d = new Date(baseDate);
-  d.setHours(h, m, s, 0);
-  return d;
-}
 
 exports.getCompanyAttendance = catchError(async (req, res, next) => {
   const { limit, offset, page } = req.pagination;
@@ -28,6 +20,19 @@ exports.getCompanyAttendance = catchError(async (req, res, next) => {
     limit,
     offset,
     where: where,
+    include: [
+      {
+        model: Staff,
+        as: "staff",
+        attributes: [
+          "fullName",
+          "phoneNumber",
+          "image",
+          "isImageMemoji",
+          "email",
+        ],
+      },
+    ],
     order: [
       ["date", "DESC"],
       ["time", "ASC"],
