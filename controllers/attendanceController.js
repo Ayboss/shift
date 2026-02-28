@@ -1,3 +1,4 @@
+const { DateTime } = require("luxon");
 const { Attendance, ShiftType, Shift } = require("../models");
 const AppError = require("../util/appError");
 const catchError = require("../util/catchError");
@@ -67,9 +68,9 @@ exports.getStaffAttendance = catchError(async (req, res, next) => {
 
 exports.getQRAttendaceInformation = catchError(async (req, res, next) => {
   const company = req.user;
-  const now = new Date();
-  const day = now.toISOString().split("T")[0]; // e.g. "2025-07-21"
-  const currentTime = now;
+  const nowInCompanyTZ = DateTime.now().setZone(company.timezone);
+  const nowUTC = nowInCompanyTZ.toUTC();
+  const day = nowInCompanyTZ.toISODate();
 
   const shiftTypes = await ShiftType.findAll({
     where: { companyId: company.id },
@@ -79,13 +80,20 @@ exports.getQRAttendaceInformation = catchError(async (req, res, next) => {
   let attendanceShiftType = null;
   let expiresAt = 0;
   for (const st of shiftTypes) {
-    const start = makeTodayTime(st.startTime, now);
-    const end = makeTodayTime(st.endTime, now);
-    start.setMinutes(start.getMinutes() - 30);
-    end.setMinutes(end.getMinutes() - 30);
-    console.log(start, end, currentTime, "TIME START");
-    console.log(st);
-    if (currentTime >= start && currentTime <= end) {
+    let start = DateTime.fromISO(`${day}T${st.startTime}`, {
+      zone: company.timezone,
+    }).minus({ minutes: 30 });
+
+    let end = DateTime.fromISO(`${day}T${st.endTime}`, {
+      zone: company.timezone,
+    }).minus({ minutes: 30 });
+
+    start = start.toUTC();
+    end = end.toUTC();
+
+    // console.log(start, end, nowUTC, day, "TIME START");
+    // console.log(st);
+    if (nowUTC >= start && nowUTC <= end) {
       attendanceShiftType = st;
       expiresAt = end;
       break;
@@ -94,30 +102,38 @@ exports.getQRAttendaceInformation = catchError(async (req, res, next) => {
   if (!attendanceShiftType) {
     return next(new AppError("It is not work time yet", 400));
   }
-  const ttlMs = expiresAt.getTime() - currentTime.getTime();
+
+  const ttlMs = expiresAt.toMillis() - nowUTC.toMillis();
+
   const token = createAttendanceToken(
     {
       type: attendanceShiftType.name,
       day,
       companyId: company.id,
     },
-    ttlMs
+    ttlMs,
   );
-
+  // console.log(token);
   const qrcodeurl = await QRCode.toDataURL(token);
 
   return res.status(200).json({
     status: "success",
     message: `Attendance for ${attendanceShiftType.name}`,
-    data: { url: qrcodeurl, expiresAt: expiresAt },
+    data: { url: qrcodeurl, expiresAt: expiresAt.toISO() },
   });
 });
 
 exports.markAttendace = catchError(async (req, res, next) => {
   // validate token and mark attendance, check if there is a shift at that time, and mark attendance
   const staff = req.user;
-  const currentTime = new Date();
-  // const day = now.toISOString().split("T")[0]; // e.g. "2025-07-21"
+  // 1️⃣ Get company timezone
+  const companyTimezone = staff.company.timezone;
+
+  // 2️⃣ Current time in company timezone
+  const nowInCompanyTZ = DateTime.now().setZone(companyTimezone);
+
+  // Convert to UTC for consistent comparisons / DB storage
+  const nowUTC = nowInCompanyTZ.toUTC();
 
   const attedanceToken = req.body.attedanceToken;
   const payload = await verifyAttendanceToken(attedanceToken);
@@ -125,8 +141,10 @@ exports.markAttendace = catchError(async (req, res, next) => {
   if (payload.companyId !== staff.companyId) {
     return next(new AppError("Staff does not belong to this company", 400));
   }
+  // 4️⃣ Check expiration safely
+  const expiresAtUTC = DateTime.fromISO(payload.expiresAt, { zone: "utc" });
   // check the time
-  if (currentTime > payload.expiresAt) {
+  if (nowUTC > expiresAtUTC) {
     return next(new AppError("Attendance has expired.", 400));
   }
   // verify token
@@ -149,7 +167,7 @@ exports.markAttendace = catchError(async (req, res, next) => {
       type: payload.type,
     },
     defaults: {
-      time: currentTime,
+      time: nowUTC.toJSDate(),
     },
   });
   if (!created) {

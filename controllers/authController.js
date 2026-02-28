@@ -34,7 +34,16 @@ exports.protectCompany = catchError(async (req, res, next) => {
 
 exports.protectStaff = catchError(async (req, res, next) => {
   const decode = await checkAndDecode(req, next);
-  const currentUser = await Staff.findOne({ where: { id: decode.id } });
+  const currentUser = await Staff.findOne({
+    where: { id: decode.id },
+    include: [
+      {
+        model: Company,
+        as: "company",
+        attributes: ["id", "companyName", "companyEmail", "timezone"],
+      },
+    ],
+  });
 
   if (!currentUser) {
     return next(new AppError("staff with token does not exit", 401));
@@ -44,8 +53,8 @@ exports.protectStaff = catchError(async (req, res, next) => {
     return next(
       new AppError(
         "staff is blocked please contact you companies administration",
-        401
-      )
+        401,
+      ),
     );
   }
 
@@ -67,8 +76,8 @@ exports.protectStaffWithPassword = catchError(async (req, res, next) => {
     return next(
       new AppError(
         "staff is blocked please contact you companies administration",
-        401
-      )
+        401,
+      ),
     );
   }
 
@@ -91,7 +100,7 @@ exports.protectAdmin = catchError(async (req, res, next) => {
 exports.isVerified = catchError(async (req, res, next) => {
   if (!req.user.verified) {
     return next(
-      new AppError("please verify user by completing the signup process", 401)
+      new AppError("please verify user by completing the signup process", 401),
     );
   }
   next();

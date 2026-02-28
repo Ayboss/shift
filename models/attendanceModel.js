@@ -36,7 +36,7 @@ Attendance.init(
       defaultValue: "morning",
     },
     time: {
-      type: DataTypes.TIME,
+      type: DataTypes.DATE,
       allowNull: false,
     },
   },
@@ -44,7 +44,7 @@ Attendance.init(
     sequelize,
     tableName: "attendances",
     timestamps: true,
-  }
+  },
 );
 
 module.exports = Attendance;

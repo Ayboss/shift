@@ -50,6 +50,11 @@ Company.init(
       type: DataTypes.STRING,
       allowNull: true,
     },
+    timezone: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      defaultValue: "Africa/Lagos",
+    },
   },
   {
     sequelize,
