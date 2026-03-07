@@ -92,6 +92,62 @@ function confirmPasswordResetValididty(staff, code, next) {
   return true;
 }
 
+async function calculateDashboardDatas(staff, req) {
+  const shiftTypes = await ShiftType.findAll({
+    where: { companyId: staff.companyId },
+    order: [["startTime", "ASC"]],
+  });
+  const shiftTypeMap = new Map();
+  shiftTypes.forEach((st) => {
+    shiftTypeMap.set(st.name, st);
+  });
+  const companyTZ = staff.company.timezone;
+  const now = DateTime.now().setZone(companyTZ);
+
+  const today = now.toISODate();
+  const currentTime = now.toFormat("HH:mm:ss");
+
+  let upcomingshift = await Shift.findAll({
+    where: {
+      staffId: staff.id,
+      date: {
+        [Op.gte]: today,
+      },
+    },
+    order: [
+      ["date", "ASC"],
+      ["type", "DESC"],
+    ],
+    limit: 50,
+    raw: true,
+  });
+
+  upcomingshift = upcomingshift.filter((shift) => {
+    if (shift.date > today) return true;
+
+    const shiftType = shiftTypeMap.get(shift.type);
+    if (!shiftType) return false;
+
+    return shiftType.endTime >= currentTime;
+  });
+  const mostRecentShift = upcomingshift.length > 0 ? upcomingshift[0] : {};
+  const { offerStats, swapStats, claimedOfferStats, claimedSwapStats } =
+    await calculateTheStatistic(staff.id);
+  if (req.query.format == "true") {
+    upcomingshift = formatShitdata(upcomingshift, shiftTypes);
+  }
+
+  return {
+    upcomingshift,
+    mostRecentShift,
+    offerStats,
+    swapStats,
+    claimedOfferStats,
+    claimedSwapStats,
+    shiftTypes,
+  };
+}
+
 exports.signup = catchError(async (req, res, next) => {
   const { email, fullName, shiftId } = req.body;
   if (!email || !fullName || !shiftId) {
@@ -177,49 +233,17 @@ exports.login = catchError(async (req, res, next) => {
 
   staff.password = undefined;
   const token = createJWTToken(staff.id);
-  const shiftTypes = await ShiftType.findAll({
-    where: { companyId: staff.companyId },
-    order: [["startTime", "ASC"]],
-  });
-  const shiftTypeMap = new Map();
-  shiftTypes.forEach((st) => {
-    shiftTypeMap.set(st.name, st);
-  });
-  const companyTZ = staff.company.timezone;
-  const now = DateTime.now().setZone(companyTZ);
 
-  const today = now.toISODate();
-  const currentTime = now.toFormat("HH:mm:ss");
+  const {
+    upcomingshift,
+    mostRecentShift,
+    offerStats,
+    swapStats,
+    claimedOfferStats,
+    claimedSwapStats,
+    shiftTypes,
+  } = await calculateDashboardDatas(staff, req);
 
-  let upcomingshift = await Shift.findAll({
-    where: {
-      staffId: staff.id,
-      date: {
-        [Op.gte]: today,
-      },
-    },
-    order: [
-      ["date", "ASC"],
-      ["type", "DESC"],
-    ],
-    limit: 50,
-    raw: true,
-  });
-
-  upcomingshift = upcomingshift.filter((shift) => {
-    if (shift.date > today) return true;
-
-    const shiftType = shiftTypeMap.get(shift.type);
-    if (!shiftType) return false;
-
-    return shiftType.startTime >= currentTime;
-  });
-  const mostRecentShift = upcomingshift.length > 0 ? upcomingshift[0] : {};
-  const { offerStats, swapStats, claimedOfferStats, claimedSwapStats } =
-    await calculateTheStatistic(staff.id);
-  if (req.query.format == "true") {
-    upcomingshift = formatShitdata(upcomingshift, shiftTypes);
-  }
   return res.status(200).json({
     status: "success",
     token: token,
@@ -248,54 +272,16 @@ exports.getCurrentUserWithDashboard = catchError(async (req, res, next) => {
     ],
   });
 
-  const shiftTypes = await ShiftType.findAll({
-    where: { companyId: req.user.companyId },
-    order: [["startTime", "ASC"]],
-  });
-  const shiftTypeMap = new Map();
-  shiftTypes.forEach((st) => {
-    shiftTypeMap.set(st.name, st);
-  });
+  const {
+    upcomingshift,
+    mostRecentShift,
+    offerStats,
+    swapStats,
+    claimedOfferStats,
+    claimedSwapStats,
+    shiftTypes,
+  } = await calculateDashboardDatas(staff, req);
 
-  const companyTZ = staff.company.timezone;
-  const now = DateTime.now().setZone(companyTZ);
-
-  const today = now.toISODate();
-  const currentTime = now.toFormat("HH:mm:ss");
-
-  let upcomingshift = await Shift.findAll({
-    where: {
-      staffId: staff.id,
-      date: {
-        [Op.gte]: today,
-      },
-    },
-    order: [
-      ["date", "ASC"],
-      ["type", "DESC"],
-    ],
-    limit: 50,
-    raw: true,
-  });
-
-  console.log(upcomingshift, "here");
-  upcomingshift = upcomingshift.filter((shift) => {
-    if (shift.date > today) return true;
-
-    const shiftType = shiftTypeMap.get(shift.type);
-    if (!shiftType) return false;
-
-    return shiftType.startTime >= currentTime;
-  });
-
-  console.log(upcomingshift, "there");
-
-  const mostRecentShift = upcomingshift.length > 0 ? upcomingshift[0] : {};
-  const { offerStats, swapStats, claimedOfferStats, claimedSwapStats } =
-    await calculateTheStatistic(staff.id);
-  if (req.query.format == "true") {
-    upcomingshift = formatShitdata(upcomingshift, shiftTypes);
-  }
   return res.status(200).json({
     status: "success",
     data: {
