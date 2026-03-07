@@ -105,7 +105,6 @@ async function calculateDashboardDatas(staff, req) {
   const now = DateTime.now().setZone(companyTZ);
 
   const today = now.toISODate();
-  const currentTime = now.toFormat("HH:mm:ss");
 
   let upcomingshift = await Shift.findAll({
     where: {
@@ -128,7 +127,11 @@ async function calculateDashboardDatas(staff, req) {
     const shiftType = shiftTypeMap.get(shift.type);
     if (!shiftType) return false;
 
-    return shiftType.endTime >= currentTime;
+    const shiftEnd = DateTime.fromISO(`${shift.date}T${shiftType.endTime}`, {
+      zone: companyTZ,
+    }).minus({ minutes: 30 });
+
+    return now <= shiftEnd;
   });
   const mostRecentShift = upcomingshift.length > 0 ? upcomingshift[0] : {};
   const { offerStats, swapStats, claimedOfferStats, claimedSwapStats } =
