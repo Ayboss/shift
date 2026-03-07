@@ -13,6 +13,7 @@ const status = require("../util/statusType");
 const { resetOTP } = require("../util/emailTemplates");
 const generateCode = require("../util/generateCode");
 const sendMail = require("../util/emailService");
+const { DateTime } = require("luxon");
 
 async function calculateTheStatistic(staffId) {
   try {
@@ -76,16 +77,16 @@ function confirmPasswordResetValididty(staff, code, next) {
     return next(
       new AppError(
         "Incorrect code, please request a forget password, and try again",
-        400
-      )
+        400,
+      ),
     );
   }
   if (!staff.passwordResetExpires || Date.now() > staff.passwordResetExpires) {
     return next(
       new AppError(
         "password expiring time over, please try the forgot password route again",
-        400
-      )
+        400,
+      ),
     );
   }
   return true;
@@ -105,8 +106,8 @@ exports.signup = catchError(async (req, res, next) => {
     return next(
       new AppError(
         "Account does not exist, Please contact your company to add you it's account",
-        400
-      )
+        400,
+      ),
     );
   }
   if (staff.verified) {
@@ -137,7 +138,7 @@ exports.setPassword = catchError(async (req, res, next) => {
   });
   if (!staff) {
     return next(
-      new AppError("This account already exist, please go to signin", "401")
+      new AppError("This account already exist, please go to signin", "401"),
     );
   }
   await staff.update({ verified: true, password: hashed });
@@ -161,7 +162,7 @@ exports.login = catchError(async (req, res, next) => {
       {
         model: Company,
         as: "company",
-        attributes: ["id", "companyName", "companyEmail"],
+        attributes: ["id", "companyName", "companyEmail", "timezone"],
       },
     ],
   });
@@ -180,19 +181,38 @@ exports.login = catchError(async (req, res, next) => {
     where: { companyId: staff.companyId },
     order: [["startTime", "ASC"]],
   });
+  const shiftTypeMap = new Map();
+  shiftTypes.forEach((st) => {
+    shiftTypeMap.set(st.name, st);
+  });
+  const companyTZ = staff.company.timezone;
+  const now = DateTime.now().setZone(companyTZ);
+
+  const today = now.toISODate();
+  const currentTime = now.toFormat("HH:mm:ss");
 
   let upcomingshift = await Shift.findAll({
     where: {
       staffId: staff.id,
       date: {
-        [Op.gt]: new Date(),
+        [Op.gte]: today,
       },
     },
     order: [
       ["date", "ASC"],
       ["type", "DESC"],
     ],
-    limit: 20,
+    limit: 50,
+    raw: true,
+  });
+
+  upcomingshift = upcomingshift.filter((shift) => {
+    if (shift.date > today) return true;
+
+    const shiftType = shiftTypeMap.get(shift.type);
+    if (!shiftType) return false;
+
+    return shiftType.startTime >= currentTime;
   });
   const mostRecentShift = upcomingshift.length > 0 ? upcomingshift[0] : {};
   const { offerStats, swapStats, claimedOfferStats, claimedSwapStats } =
@@ -223,27 +243,53 @@ exports.getCurrentUserWithDashboard = catchError(async (req, res, next) => {
       {
         model: Company,
         as: "company",
-        attributes: ["id", "companyName", "companyEmail"],
+        attributes: ["id", "companyName", "companyEmail", "timezone"],
       },
     ],
   });
+
+  const shiftTypes = await ShiftType.findAll({
+    where: { companyId: req.user.companyId },
+    order: [["startTime", "ASC"]],
+  });
+  const shiftTypeMap = new Map();
+  shiftTypes.forEach((st) => {
+    shiftTypeMap.set(st.name, st);
+  });
+
+  const companyTZ = staff.company.timezone;
+  const now = DateTime.now().setZone(companyTZ);
+
+  const today = now.toISODate();
+  const currentTime = now.toFormat("HH:mm:ss");
+
   let upcomingshift = await Shift.findAll({
     where: {
       staffId: staff.id,
       date: {
-        [Op.gt]: new Date(),
+        [Op.gte]: today,
       },
     },
     order: [
       ["date", "ASC"],
       ["type", "DESC"],
     ],
-    limit: 20,
+    limit: 50,
+    raw: true,
   });
-  const shiftTypes = await ShiftType.findAll({
-    where: { companyId: req.user.companyId },
-    order: [["startTime", "ASC"]],
+
+  console.log(upcomingshift, "here");
+  upcomingshift = upcomingshift.filter((shift) => {
+    if (shift.date > today) return true;
+
+    const shiftType = shiftTypeMap.get(shift.type);
+    if (!shiftType) return false;
+
+    return shiftType.startTime >= currentTime;
   });
+
+  console.log(upcomingshift, "there");
+
   const mostRecentShift = upcomingshift.length > 0 ? upcomingshift[0] : {};
   const { offerStats, swapStats, claimedOfferStats, claimedSwapStats } =
     await calculateTheStatistic(staff.id);
@@ -536,7 +582,7 @@ exports.getOffersAndSwaps = catchError(async (req, res, next) => {
 
   // 🔥 Combine and sort by createdAt
   const combined = [...offersWithType, ...swapsWithType].sort(
-    (a, b) => new Date(b.createdAt) - new Date(a.createdAt) // descending order (newest first)
+    (a, b) => new Date(b.createdAt) - new Date(a.createdAt), // descending order (newest first)
   );
   res.status(200).json({
     status: "success",
