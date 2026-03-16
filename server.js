@@ -17,10 +17,12 @@ cron.schedule("0 0 * * *", () => {
   queryDatabse();
 });
 
-cron.schedule("0 * * * *", () => {
+cron.schedule("*/14 * * * *", () => {
   fetch("https://shift-yuw6.onrender.com/test")
     .then((response) => response.json())
-    .then((res) => {})
+    .then((res) => {
+      console.log(res);
+    })
     .catch((err) => {
       console.log(err);
     });
