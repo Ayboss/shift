@@ -1,21 +1,25 @@
-const { createClient } = require("smtpexpress");
 const { welcomeHTML } = require("./emailTemplates");
+const { Client } = require("ensend");
 
-const smtpexpressClient = createClient({
-  projectId: process.env.SMTP_PROJECT_ID,
-  projectSecret: process.env.SMTP_PROJECT_SECRET,
+const ensend = new Client({
+  secret: process.env.SMTP_PROJECT_SECRET,
 });
 
 async function sendMail(subject, message, email) {
   try {
-    const res = await smtpexpressClient.sendApi.sendMail({
+    const res = await ensend.SendApi.SendMailMessage({
       subject: subject,
       message: message,
       sender: {
         name: "SHIFT",
-        email: "shft-de5f91@smtpexpress.email",
+        address: "shft-team@ensend.me",
       },
-      recipients: email,
+      recipients: [
+        {
+          name: "",
+          address: email,
+        },
+      ],
     });
     console.log(res);
   } catch (err) {
@@ -25,7 +29,7 @@ async function sendMail(subject, message, email) {
 
 async function sendMailTemplate(subject, templateId, varaibles, email) {
   try {
-    const res = await smtpexpressClient.sendApi.sendMail({
+    const res = await ensend.SendApi.SendMailMessage({
       subject: subject,
       template: {
         id: templateId,
@@ -34,10 +38,15 @@ async function sendMailTemplate(subject, templateId, varaibles, email) {
         },
       },
       sender: {
-        name: "Ayo Ike",
-        email: "shft-de5f91@smtpexpress.email",
+        name: "SHIFT",
+        address: "shft-team@ensend.me",
       },
-      recipients: email,
+      recipients: [
+        {
+          name: "",
+          address: email,
+        },
+      ],
     });
     console.log(res);
   } catch (err) {
@@ -49,7 +58,7 @@ async function sendMailTemplate(subject, templateId, varaibles, email) {
 //   `Welcome to SHFT – You’ve Been Added by dudeyouhavenoieda!`,
 //   welcomeHTML("dudeyouhavenoidea", "2345SHFT"),
 //   // "testing email",
-//   "bamiayo90@gmail.com"
+//   "bamiayo90@gmail.com",
 // );
 
 // sendMailTemplate(`Welcome to SHFT – You’ve Been Added by dudeyouhavenoieda!`, )

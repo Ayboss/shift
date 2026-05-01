@@ -16,6 +16,7 @@
     "cloudinary": "^2.6.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
+    "ensend": "^0.0.10",
     "expo-server-sdk": "^3.15.0",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
@@ -29,5 +30,6 @@
     "sequelize": "^6.37.6",
     "smtpexpress": "^0.0.15",
     "xlsx": "^0.18.5"
-  }
+  },
+  "type": "commonjs"
 }
