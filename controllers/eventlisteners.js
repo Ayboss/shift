@@ -38,7 +38,7 @@ exports.notifyShiftDocumentUploaded = async (companyId) => {
       title,
       desc,
       null,
-      null
+      null,
     );
     if (message) {
       messages.push(message);
@@ -97,7 +97,7 @@ exports.notifyOfferToCircle = async (staff, offerid) => {
       title,
       desc,
       null,
-      offerid
+      offerid,
     );
     if (message) {
       messages.push(message);
@@ -126,7 +126,7 @@ exports.notifyOfferIsClaimed = async (staff, offer) => {
     title,
     body,
     null,
-    redirectId
+    "redirectId",
   );
   createExpoMessage([message]);
 };

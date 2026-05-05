@@ -68,28 +68,34 @@ exports.createOffer = catchError(async (req, res, next) => {
   });
 });
 
-const getAllOffer = catchError(async (whereClause, req, res) => {
-  const { limit, offset, page } = req.pagination;
-  const { count, rows: offers } = await Offer.findAndCountAll({
-    where: whereClause,
-    include: modelInclude,
-    limit,
-    offset,
-  });
+const getAllOffer = async (whereClause, req, res) => {
+  try {
+    const { limit, offset, page } = req.pagination;
 
-  return res.status(200).json({
-    status: "success",
-    data: offers,
-    meta: {
-      total: count,
-      page,
+    const { count, rows: offers } = await Offer.findAndCountAll({
+      where: whereClause,
+      include: modelInclude,
       limit,
-      totalPages: Math.ceil(count / limit),
-    },
-  });
-});
+      offset,
+    });
+
+    return res.status(200).json({
+      status: "success",
+      data: offers,
+      meta: {
+        total: count,
+        page,
+        limit,
+        totalPages: Math.ceil(count / limit),
+      },
+    });
+  } catch (err) {
+    throw err;
+  }
+};
 exports.getAllOfferCompany = catchError(async (req, res, next) => {
-  const { status: statusquery } = req.query;
+  let { status: statusquery } = req.query;
+  statusquery = statusquery?.toUpperCase();
   let whereClause = {
     companyId: req.user.id,
     status: status.OPEN,
@@ -102,7 +108,8 @@ exports.getAllOfferCompany = catchError(async (req, res, next) => {
 });
 
 exports.getAllOfferStaff = catchError(async (req, res, next) => {
-  const { status: statusquery } = req.query;
+  let { status: statusquery } = req.query;
+  statusquery = statusquery?.toUpperCase();
   let whereClause = {
     companyId: req.user.companyId,
     status: status.OPEN,
@@ -115,6 +122,20 @@ exports.getAllOfferStaff = catchError(async (req, res, next) => {
   }
 
   if (statusquery) {
+    if (
+      !(
+        statusquery == status.IN_REVIEW ||
+        statusquery == status.ACCEPTED ||
+        statusquery == status.DECLINED
+      )
+    ) {
+      return next(
+        new AppError(
+          "status should be either OPEN, ACCEPTED, IN_REVIEW, DECLINED",
+        ),
+      );
+    }
+
     whereClause.status = statusquery;
   }
   getAllOffer(whereClause, req, res);
@@ -128,7 +149,7 @@ exports.getOneOffer = catchError(async (req, res, next) => {
   });
   if (!offer) {
     return next(
-      new AppError("This offer for this company does not exist", 400)
+      new AppError("This offer for this company does not exist", 400),
     );
   }
   return res.status(200).json({
@@ -145,7 +166,7 @@ exports.getOneOfferCompany = catchError(async (req, res, next) => {
   });
   if (!offer) {
     return next(
-      new AppError("This offer for this company does not exist", 400)
+      new AppError("This offer for this company does not exist", 400),
     );
   }
   return res.status(200).json({
@@ -184,8 +205,8 @@ exports.updateOfferStatus = catchError(async (req, res, next) => {
     return next(
       new AppError(
         "you can either pass ACCEPTED  or DECLINED to the status",
-        400
-      )
+        400,
+      ),
     );
   }
   const offer = await Offer.findOne({
@@ -198,7 +219,7 @@ exports.updateOfferStatus = catchError(async (req, res, next) => {
   if (statusval == status.ACCEPTED) {
     await Shift.update(
       { staffId: offer.claimerId },
-      { where: { id: offer.shiftId } }
+      { where: { id: offer.shiftId } },
     );
   }
   await offer.update({ status: statusval });

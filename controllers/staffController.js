@@ -482,8 +482,8 @@ exports.verifyStaffCompany = catchError(async (req, res, next) => {
 
 exports.getOffersAndSwaps = catchError(async (req, res, next) => {
   const user = req.user;
-  const { status: statusquery } = req.query;
-
+  let { status: statusquery } = req.query;
+  statusquery = statusquery?.toUpperCase();
   let whereClause = {
     companyId: user.companyId,
     status: status.OPEN,
@@ -508,6 +508,20 @@ exports.getOffersAndSwaps = catchError(async (req, res, next) => {
     [Op.or]: [{ staffId: user.id }, { claimerId: user.id }],
   };
   if (statusquery) {
+    if (
+      !(
+        statusquery == status.IN_REVIEW ||
+        statusquery == status.ACCEPTED ||
+        statusquery == status.DECLINED
+      )
+    ) {
+      return next(
+        new AppError(
+          "status should be either OPEN, ACCEPTED, IN_REVIEW, DECLINED",
+        ),
+      );
+    }
+
     whereClause.status = statusquery;
     whereClauseswap.status = statusquery;
   }
