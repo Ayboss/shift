@@ -126,7 +126,8 @@ exports.getAllOfferStaff = catchError(async (req, res, next) => {
       !(
         statusquery == status.IN_REVIEW ||
         statusquery == status.ACCEPTED ||
-        statusquery == status.DECLINED
+        statusquery == status.DECLINED ||
+        statusquery == status.OPEN
       )
     ) {
       return next(
