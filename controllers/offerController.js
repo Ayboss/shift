@@ -98,7 +98,6 @@ exports.getAllOfferCompany = catchError(async (req, res, next) => {
   statusquery = statusquery?.toUpperCase();
   let whereClause = {
     companyId: req.user.id,
-    status: status.OPEN,
   };
   if (statusquery) {
     whereClause.status = statusquery;
