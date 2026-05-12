@@ -43,7 +43,7 @@ const statDetailsClause = async function (companyId) {
     return [
       fn(
         "SUM",
-        literal(`CASE WHEN shifts.type = ${safeValue} THEN 1 ELSE 0 END`)
+        literal(`CASE WHEN shifts.type = ${safeValue} THEN 1 ELSE 0 END`),
       ),
       alias,
     ];
@@ -57,28 +57,28 @@ const statDetailsClause = async function (companyId) {
         [
           fn(
             "SUM",
-            literal(`CASE WHEN offers.status = 'OPEN' THEN 1 ELSE 0 END`)
+            literal(`CASE WHEN offers.status = 'OPEN' THEN 1 ELSE 0 END`),
           ),
           "offersOpen",
         ],
         [
           fn(
             "SUM",
-            literal(`CASE WHEN offers.status = 'IN_REVIEW' THEN 1 ELSE 0 END`)
+            literal(`CASE WHEN offers.status = 'IN_REVIEW' THEN 1 ELSE 0 END`),
           ),
           "offersReview",
         ],
         [
           fn(
             "SUM",
-            literal(`CASE WHEN offers.status = 'ACCEPTED' THEN 1 ELSE 0 END`)
+            literal(`CASE WHEN offers.status = 'ACCEPTED' THEN 1 ELSE 0 END`),
           ),
           "offersAccepted",
         ],
         [
           fn(
             "SUM",
-            literal(`CASE WHEN offers.status = 'DECLINED' THEN 1 ELSE 0 END`)
+            literal(`CASE WHEN offers.status = 'DECLINED' THEN 1 ELSE 0 END`),
           ),
           "offersDeclined",
         ],
@@ -86,28 +86,28 @@ const statDetailsClause = async function (companyId) {
         [
           fn(
             "SUM",
-            literal(`CASE WHEN swaps.status = 'OPEN' THEN 1 ELSE 0 END`)
+            literal(`CASE WHEN swaps.status = 'OPEN' THEN 1 ELSE 0 END`),
           ),
           "swapsOpen",
         ],
         [
           fn(
             "SUM",
-            literal(`CASE WHEN swaps.status = 'IN_REVIEW' THEN 1 ELSE 0 END`)
+            literal(`CASE WHEN swaps.status = 'IN_REVIEW' THEN 1 ELSE 0 END`),
           ),
           "swapsReview",
         ],
         [
           fn(
             "SUM",
-            literal(`CASE WHEN swaps.status = 'ACCEPTED' THEN 1 ELSE 0 END`)
+            literal(`CASE WHEN swaps.status = 'ACCEPTED' THEN 1 ELSE 0 END`),
           ),
           "swapsAccepted",
         ],
         [
           fn(
             "SUM",
-            literal(`CASE WHEN swaps.status = 'DECLINED' THEN 1 ELSE 0 END`)
+            literal(`CASE WHEN swaps.status = 'DECLINED' THEN 1 ELSE 0 END`),
           ),
           "swapsDeclined",
         ],
@@ -250,13 +250,13 @@ const getDashboardDetails = async (company) => {
         attributes: [
           [
             sequelize.literal(
-              `COUNT(CASE WHEN verified = true AND blocked = false THEN 1 END)`
+              `COUNT(CASE WHEN verified = true AND blocked = false THEN 1 END)`,
             ),
             "verifiedCount",
           ],
           [
             sequelize.literal(
-              `COUNT(CASE WHEN verified = false AND blocked = false THEN 1 END)`
+              `COUNT(CASE WHEN verified = false AND blocked = false THEN 1 END)`,
             ),
             "nonVerifiedCount",
           ],
@@ -363,13 +363,13 @@ exports.getWorkerDetails = catchError(async (req, res, next) => {
     attributes: [
       [
         sequelize.literal(
-          `COUNT(CASE WHEN verified = true AND blocked = false THEN 1 END)`
+          `COUNT(CASE WHEN verified = true AND blocked = false THEN 1 END)`,
         ),
         "verifiedCount",
       ],
       [
         sequelize.literal(
-          `COUNT(CASE WHEN verified = false AND blocked = false THEN 1 END)`
+          `COUNT(CASE WHEN verified = false AND blocked = false THEN 1 END)`,
         ),
         "nonVerifiedCount",
       ],
@@ -400,7 +400,7 @@ exports.addStaff = catchError(async (req, res, next) => {
   sendMail(
     `Welcome to SHFT – You’ve Been Added by ${company.companyName}!`,
     welcomeHTML(company.companyName, staff.id),
-    req.body.email
+    req.body.email,
   );
   return res.status(201).json({
     status: "success",

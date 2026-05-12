@@ -93,6 +93,9 @@ exports.getQRAttendaceInformation = catchError(async (req, res, next) => {
       zone: company.timezone,
     }).minus({ minutes: 30 });
 
+    if (end < start) {
+      end = end.plus({ days: 1 });
+    }
     start = start.toUTC();
     end = end.toUTC();
 

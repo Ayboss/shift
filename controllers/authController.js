@@ -24,6 +24,9 @@ const checkAndDecode = async (req, next) => {
 
 exports.protectCompany = catchError(async (req, res, next) => {
   const decode = await checkAndDecode(req, next);
+  if (!decode.id) {
+    return next(new AppError("company with token does not exit", 401));
+  }
   const currentUser = await Company.findOne({ where: { id: decode.id } });
   if (!currentUser) {
     return next(new AppError("company with token does not exit", 401));
@@ -34,6 +37,9 @@ exports.protectCompany = catchError(async (req, res, next) => {
 
 exports.protectStaff = catchError(async (req, res, next) => {
   const decode = await checkAndDecode(req, next);
+  if (!decode.id) {
+    return next(new AppError("company with token does not exit", 401));
+  }
   const currentUser = await Staff.findOne({
     where: { id: decode.id },
     include: [
@@ -64,6 +70,9 @@ exports.protectStaff = catchError(async (req, res, next) => {
 
 exports.protectStaffWithPassword = catchError(async (req, res, next) => {
   const decode = await checkAndDecode(req, next);
+  if (!decode.id) {
+    return next(new AppError("Resource with token does not exit", 401));
+  }
   const currentUser = await Staff.scope("withPassword").findOne({
     where: { id: decode.id },
   });

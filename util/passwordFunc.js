@@ -9,6 +9,7 @@ exports.hashPassword = async (password) => {
 };
 
 exports.comparePassword = async (checkPassword, userPassword) => {
+  console.log(checkPassword, userPassword);
   try {
     return await bcrypt.compare(checkPassword, userPassword);
   } catch (err) {
