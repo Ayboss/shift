@@ -108,7 +108,9 @@ exports.getQRAttendaceInformation = catchError(async (req, res, next) => {
     }
   }
   if (!attendanceShiftType) {
-    return next(new AppError("It is not work time yet", 400));
+    return next(
+      new AppError(`It is not work time yet ${nowUTC} ${start} ${end} `, 400),
+    );
   }
 
   const ttlMs = expiresAt.toMillis() - nowUTC.toMillis();
