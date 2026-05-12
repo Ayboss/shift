@@ -84,33 +84,63 @@ exports.getQRAttendaceInformation = catchError(async (req, res, next) => {
 
   let attendanceShiftType = null;
   let expiresAt = 0;
+  let error = "";
+
   for (const st of shiftTypes) {
-    let start = DateTime.fromISO(`${day}T${st.startTime}`, {
-      zone: company.timezone,
-    }).minus({ minutes: 30 });
+    const today = nowInCompanyTZ.startOf("day");
+    const yesterday = today.minus({ days: 1 });
 
-    let end = DateTime.fromISO(`${day}T${st.endTime}`, {
-      zone: company.timezone,
-    }).minus({ minutes: 30 });
+    // Build today's shift
+    let startToday = today.set({
+      hour: Number(st.startTime.split(":")[0]),
+      minute: Number(st.startTime.split(":")[1]),
+    });
 
-    if (end < start) {
-      end = end.plus({ days: 1 });
+    let endToday = today.set({
+      hour: Number(st.endTime.split(":")[0]),
+      minute: Number(st.endTime.split(":")[1]),
+    });
+
+    // Early access window
+    startToday = startToday.minus({ minutes: 30 });
+
+    // Overnight shift
+    if (endToday <= startToday) {
+      endToday = endToday.plus({ days: 1 });
     }
-    start = start.toUTC();
-    end = end.toUTC();
 
-    // console.log(start, end, nowUTC, day, "TIME START");
-    // console.log(st);
-    if (nowUTC >= start && nowUTC <= end) {
+    // Also build yesterday's overnight version
+    let startYesterday = yesterday.set({
+      hour: Number(st.startTime.split(":")[0]),
+      minute: Number(st.startTime.split(":")[1]),
+    });
+
+    let endYesterday = yesterday.set({
+      hour: Number(st.endTime.split(":")[0]),
+      minute: Number(st.endTime.split(":")[1]),
+    });
+
+    startYesterday = startYesterday.minus({ minutes: 30 });
+
+    if (endYesterday <= startYesterday) {
+      endYesterday = endYesterday.plus({ days: 1 });
+    }
+
+    const isWithinToday =
+      nowInCompanyTZ >= startToday && nowInCompanyTZ <= endToday;
+
+    const isWithinYesterday =
+      nowInCompanyTZ >= startYesterday && nowInCompanyTZ <= endYesterday;
+
+    if (isWithinToday || isWithinYesterday) {
       attendanceShiftType = st;
-      expiresAt = end;
+      expiresAt = isWithinToday ? endToday : endYesterday;
       break;
     }
   }
+
   if (!attendanceShiftType) {
-    return next(
-      new AppError(`It is not work time yet ${nowUTC} ${start} ${end} `, 400),
-    );
+    return next(new AppError(`It is not work time yet ${error} `, 400));
   }
 
   const ttlMs = expiresAt.toMillis() - nowUTC.toMillis();
